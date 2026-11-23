@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.check_limite_semanal() FROM PUBLIC, anon, authenticated;

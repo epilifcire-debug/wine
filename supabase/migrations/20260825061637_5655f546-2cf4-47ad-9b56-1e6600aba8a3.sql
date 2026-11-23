@@ -1,0 +1,1 @@
+ALTER TABLE public.alunos ALTER COLUMN whatsapp_optin SET DEFAULT true;

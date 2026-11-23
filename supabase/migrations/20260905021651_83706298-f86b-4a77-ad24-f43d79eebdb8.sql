@@ -1,0 +1,2 @@
+ALTER TABLE public.planos ADD COLUMN IF NOT EXISTS ilimitado boolean NOT NULL DEFAULT false;
+UPDATE public.planos SET ilimitado = true WHERE acesso_livre = true AND limite_semanal IS NULL AND limite_mensal IS NULL;

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.ensure_current_student() FROM anon;

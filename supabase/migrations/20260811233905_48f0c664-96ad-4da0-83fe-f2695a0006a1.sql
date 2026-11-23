@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.block_admin_aluno() FROM PUBLIC, anon, authenticated;

@@ -1,0 +1,3 @@
+CREATE POLICY "avatars_insert_admin" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'avatars' AND public.is_admin());
+CREATE POLICY "avatars_update_admin" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'avatars' AND public.is_admin()) WITH CHECK (bucket_id = 'avatars' AND public.is_admin());
+CREATE POLICY "avatars_delete_admin" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'avatars' AND public.is_admin());
