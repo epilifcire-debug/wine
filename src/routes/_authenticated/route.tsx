@@ -18,6 +18,7 @@ function PlanoGate({ children }: { children: React.ReactNode }) {
   const { aluno, isAdmin, loading } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const bypass = import.meta.env.DEV && import.meta.env.VITE_PREVIEW_BYPASS === "1";
 
   const { data: contratos, isLoading } = useQuery({
     queryKey: qk.contratos(aluno?.id),
@@ -25,7 +26,7 @@ function PlanoGate({ children }: { children: React.ReactNode }) {
     enabled: Boolean(aluno?.id) && !isAdmin,
   });
 
-  const verificando = loading || (!isAdmin && Boolean(aluno?.id) && (isLoading || contratos === undefined));
+  const verificando = !bypass && (loading || (!isAdmin && Boolean(aluno?.id) && (isLoading || contratos === undefined)));
   // Plano escolhido (aguardando pagamento) já libera a navegação; as reservas
   // continuam bloqueadas no banco até a confirmação do pagamento.
   const liberado = (contratos ?? []).some((c) => {
@@ -33,7 +34,7 @@ function PlanoGate({ children }: { children: React.ReactNode }) {
     return s === "ativo" || s === "proximo_vencimento" || s === "aguardando_pagamento";
   });
   const naRotaLivre = ROTAS_SEM_PLANO.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  const bloqueado = !verificando && !isAdmin && Boolean(aluno?.id) && !liberado && !naRotaLivre;
+  const bloqueado = !bypass && !verificando && !isAdmin && Boolean(aluno?.id) && !liberado && !naRotaLivre;
 
   useEffect(() => {
     if (bloqueado) navigate({ to: "/planos", replace: true });
@@ -47,6 +48,10 @@ function PlanoGate({ children }: { children: React.ReactNode }) {
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
+    // Somente teste local (npm run dev com VITE_PREVIEW_BYPASS=1). Nunca vale em produção.
+    if (import.meta.env.DEV && import.meta.env.VITE_PREVIEW_BYPASS === "1") {
+      return { user: { id: "preview" } as never };
+    }
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) throw redirect({ to: "/auth" });
     return { user: data.user };
