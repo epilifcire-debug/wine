@@ -26,9 +26,11 @@ function PlanoGate({ children }: { children: React.ReactNode }) {
   });
 
   const verificando = loading || (!isAdmin && Boolean(aluno?.id) && (isLoading || contratos === undefined));
+  // Plano escolhido (aguardando pagamento) já libera a navegação; as reservas
+  // continuam bloqueadas no banco até a confirmação do pagamento.
   const liberado = (contratos ?? []).some((c) => {
     const s = statusContrato(c);
-    return s === "ativo" || s === "proximo_vencimento";
+    return s === "ativo" || s === "proximo_vencimento" || s === "aguardando_pagamento";
   });
   const naRotaLivre = ROTAS_SEM_PLANO.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   const bloqueado = !verificando && !isAdmin && Boolean(aluno?.id) && !liberado && !naRotaLivre;
