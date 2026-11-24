@@ -117,7 +117,7 @@ function AuthPage() {
           height={768}
         />
 
-        <p className="mt-8 text-center text-sm tracking-[0.2em] text-muted-foreground uppercase">
+        <p className="mt-8 text-center text-sm text-muted-foreground">
           Acesse sua conta
         </p>
 
