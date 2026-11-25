@@ -3,3 +3,4 @@ DESCRIPTION=App do Wine Barbell Club (aulas, planos, check-in)
 MAIN=start.mjs
 MEMORY=1536
 VERSION=LATEST
+SUBDOMAIN=winebarbellclub
