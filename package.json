@@ -1,5 +1,5 @@
 {
-  "version": "1.9.0",
+  "version": "1.9.1",
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": false,
@@ -10,7 +10,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "start": "node start.mjs",
+    "build:node": "NITRO_PRESET=node-server vite build"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -86,5 +88,6 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.1.5"
-  }
+  },
+  "main": "start.mjs"
 }
