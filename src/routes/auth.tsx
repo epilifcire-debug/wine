@@ -244,6 +244,9 @@ function AuthPage() {
           </>
         )}
       </div>
+      <p className="mt-6 text-center text-[11px] text-muted-foreground">
+        v{__APP_VERSION__} · {__APP_COMMIT__}
+      </p>
     </main>
   );
 }
