@@ -685,6 +685,7 @@ export type Database = {
           beneficios: string | null
           created_at: string
           descricao: string | null
+          dias_acesso_livre: number[] | null
           dias_permitidos: number[] | null
           duracao_meses: number
           forma_pagamento: string
@@ -707,6 +708,7 @@ export type Database = {
           beneficios?: string | null
           created_at?: string
           descricao?: string | null
+          dias_acesso_livre?: number[] | null
           dias_permitidos?: number[] | null
           duracao_meses?: number
           forma_pagamento?: string
@@ -729,6 +731,7 @@ export type Database = {
           beneficios?: string | null
           created_at?: string
           descricao?: string | null
+          dias_acesso_livre?: number[] | null
           dias_permitidos?: number[] | null
           duracao_meses?: number
           forma_pagamento?: string

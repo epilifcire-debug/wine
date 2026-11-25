@@ -93,7 +93,14 @@ const camposBase: FieldSpec[] = [
     label: "Dias liberados",
     type: "checkboxes",
     options: DIAS_SEMANA,
-    hint: "Nenhum marcado = todos os dias.",
+    hint: "Dias com reserva de aula. Nenhum marcado = todos os dias.",
+  },
+  {
+    name: "dias_acesso_livre",
+    label: "Dias de acesso livre (sem reserva de aula)",
+    type: "checkboxes",
+    options: DIAS_SEMANA,
+    hint: "Ex.: Flagship = sábado, para treino de força. Nesses dias o aluno não reserva aulas.",
   },
   {
     name: "acesso_livre",
@@ -168,6 +175,10 @@ function AdminPlanos() {
           Array.isArray(values.dias_permitidos) && values.dias_permitidos.length > 0
             ? values.dias_permitidos.map(Number).sort()
             : null,
+        dias_acesso_livre:
+          Array.isArray(values.dias_acesso_livre) && values.dias_acesso_livre.length > 0
+            ? values.dias_acesso_livre.map(Number).sort()
+            : null,
         modalidades_permitidas:
           Array.isArray(values.modalidades_permitidas) && values.modalidades_permitidas.length > 0
             ? values.modalidades_permitidas
@@ -238,6 +249,7 @@ function AdminPlanos() {
                     preco: (p.preco_centavos ?? 0) / 100,
                     preco_recorrencia: (p.preco_recorrencia_centavos ?? 0) / 100,
                     dias_permitidos: (p.dias_permitidos ?? []).map(String),
+                    dias_acesso_livre: (p.dias_acesso_livre ?? []).map(String),
                     modalidades_permitidas: p.modalidades_permitidas ?? [],
                     acesso_livre: p.acesso_livre ? "sim" : "nao",
                     ilimitado: p.ilimitado ? "sim" : "nao",

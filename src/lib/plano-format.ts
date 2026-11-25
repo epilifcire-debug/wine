@@ -38,6 +38,22 @@ export function diasPlano(plano: Plano) {
   return DIAS_SEMANA.filter((d) => set.has(Number(d.value))).map((d) => d.label).join(", ");
 }
 
+export function diasAcessoLivrePlano(plano: Plano) {
+  const dias = plano.dias_acesso_livre ?? [];
+  if (dias.length === 0) return null;
+  const set = new Set(dias.map(Number));
+  return DIAS_SEMANA.filter((d) => set.has(Number(d.value))).map((d) => d.label).join(", ");
+}
+
+/** Dia de acesso livre (sem reserva) para o plano nesta data? */
+export function ehDiaAcessoLivre(plano: Plano | null | undefined, dataISO: string) {
+  if (!plano) return false;
+  const dia = diaIsoSemana(dataISO);
+  const livres = (plano.dias_acesso_livre ?? []).map(Number);
+  const aulas = (plano.dias_permitidos ?? []).map(Number);
+  return livres.includes(dia) && !aulas.includes(dia);
+}
+
 /** Dia ISO da semana de uma data AAAA-MM-DD (1 = segunda ... 7 = domingo). */
 export function diaIsoSemana(dataISO: string) {
   const d = new Date(`${dataISO.slice(0, 10)}T12:00:00`).getDay();

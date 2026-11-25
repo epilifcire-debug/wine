@@ -2,6 +2,7 @@ import { Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchModalidades, precoBRL, qk, type Plano } from "@/lib/queries";
 import {
+  diasAcessoLivrePlano,
   diasPlano,
   duracaoPlano,
   itensPlano,
@@ -72,6 +73,12 @@ export function PlanoDetails({ plano, atual = false, mostrarStatus = false }: Pl
           <dt className="text-xs text-muted-foreground">Dias liberados</dt>
           <dd className="font-medium text-foreground">{diasPlano(plano)}</dd>
         </div>
+        {diasAcessoLivrePlano(plano) && (
+          <div className="sm:col-span-2">
+            <dt className="text-xs text-muted-foreground">Acesso livre, sem reserva de aula</dt>
+            <dd className="font-medium text-foreground">{diasAcessoLivrePlano(plano)} · treino de força</dd>
+          </div>
+        )}
         <div>
           <dt className="text-xs text-muted-foreground">Turmas</dt>
           <dd className="font-medium text-foreground">{turmas}</dd>

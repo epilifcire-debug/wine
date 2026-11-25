@@ -1,5 +1,5 @@
 import { aulasNaSemana, aulasNoMes, type Plano } from "./queries";
-import { diaIsoSemana, diasPlano } from "./plano-format";
+import { diaIsoSemana, diasPlano, ehDiaAcessoLivre } from "./plano-format";
 
 export type BookingReason =
   | "NOT_AUTHENTICATED"
@@ -8,6 +8,7 @@ export type BookingReason =
   | "WEEKLY_LIMIT_REACHED"
   | "MONTHLY_LIMIT_REACHED"
   | "DAY_NOT_ALLOWED"
+  | "FREE_ACCESS_DAY"
   | "CLASS_NOT_ALLOWED"
   | "DUPLICATE_BOOKING"
   | "CLASS_FULL"
@@ -55,6 +56,9 @@ export function msgDiaNaoPermitido(plano?: Plano | null) {
   const dias = plano ? diasPlano(plano) : "";
   return `Seu plano não libera aulas neste dia${dias ? ` (dias liberados: ${dias})` : ""}. Escolha outra data, faça upgrade do seu plano ou use um Day Use.`;
 }
+
+export const MSG_ACESSO_LIVRE =
+  "Neste dia seu plano tem acesso livre ao studio para treino de força, sem reserva de aula. É só chegar e treinar.";
 
 export const MSG_TURMA_NAO_PERMITIDA =
   "Seu plano não libera esta turma. Escolha uma turma incluída no seu plano, faça upgrade ou use um Day Use.";
@@ -132,6 +136,7 @@ export function canBookClass(input: {
       : { allowed: false, reason, ...extra };
 
   const dataAula = horario?.data;
+  if (dataAula && ehDiaAcessoLivre(plano, dataAula)) return bloqueio("FREE_ACCESS_DAY");
   const dias = plano?.dias_permitidos ?? [];
   if (dataAula && dias.length > 0 && !dias.map(Number).includes(diaIsoSemana(dataAula))) {
     return bloqueio("DAY_NOT_ALLOWED");
@@ -167,6 +172,7 @@ export function reasonFromError(message?: string | null): BookingReason | null {
   if (/NO_ACTIVE_PLAN/i.test(msg)) return "NO_PLAN";
   if (/WEEKLY_PLAN_LIMIT_REACHED|limite semanal/i.test(msg)) return "WEEKLY_LIMIT_REACHED";
   if (/MONTHLY_PLAN_LIMIT_REACHED/i.test(msg)) return "MONTHLY_LIMIT_REACHED";
+  if (/PLAN_FREE_ACCESS_DAY/i.test(msg)) return "FREE_ACCESS_DAY";
   if (/PLAN_DAY_NOT_ALLOWED/i.test(msg)) return "DAY_NOT_ALLOWED";
   if (/PLAN_CLASS_NOT_ALLOWED/i.test(msg)) return "CLASS_NOT_ALLOWED";
   return null;

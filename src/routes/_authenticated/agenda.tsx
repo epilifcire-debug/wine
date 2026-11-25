@@ -24,6 +24,7 @@ import {
   MSG_NO_PLAN,
   MSG_PLAN_EXPIRED,
   MSG_TURMA_NAO_PERMITIDA,
+  MSG_ACESSO_LIVRE,
   msgDiaNaoPermitido,
   msgLimiteMensal,
   canBookClass,
@@ -53,6 +54,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EmptyState, PageTitle } from "@/components/AppShell";
+import { ehDiaAcessoLivre } from "@/lib/plano-format";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: Agenda,
@@ -198,6 +200,9 @@ function Agenda() {
       case "DAY_NOT_ALLOWED":
         setLimiteMsg(msgDiaNaoPermitido(plano));
         return;
+      case "FREE_ACCESS_DAY":
+        setLimiteMsg(MSG_ACESSO_LIVRE);
+        return;
       case "CLASS_NOT_ALLOWED":
         setLimiteMsg(MSG_TURMA_NAO_PERMITIDA);
         return;
@@ -262,6 +267,10 @@ function Agenda() {
       }
       if (reason === "MONTHLY_LIMIT_REACHED") {
         setLimiteMsg(msgLimiteMensal(plano?.limite_mensal));
+        return;
+      }
+      if (reason === "FREE_ACCESS_DAY") {
+        setLimiteMsg(MSG_ACESSO_LIVRE);
         return;
       }
       if (reason === "DAY_NOT_ALLOWED") {
@@ -334,6 +343,11 @@ function Agenda() {
           {Object.entries(porData).map(([data, lista]) => (
             <section key={data}>
               <h2 className="eyebrow mb-2">{formatDateLong(data)}</h2>
+              {contratoVigente && ehDiaAcessoLivre(plano, data) && (
+                <p className="surface-panel mb-2 px-4 py-2 text-xs text-primary">
+                  Acesso livre para treino de força neste dia, sem reserva de aula.
+                </p>
+              )}
               <div className="space-y-2">
                 {lista.map((h) => {
                   const usados = ocupacao?.get(h.id) ?? 0;
@@ -520,7 +534,7 @@ function Agenda() {
       <AlertDialog open={Boolean(limiteMsg)} onOpenChange={(o) => !o && setLimiteMsg(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{/dia|turma/i.test(limiteMsg ?? "") ? "Fora das regras do seu plano" : /mês/i.test(limiteMsg ?? "") ? "Limite mensal do plano atingido" : "Limite semanal do plano atingido"}</AlertDialogTitle>
+            <AlertDialogTitle>{/acesso livre/i.test(limiteMsg ?? "") ? "Dia de acesso livre" : /dia|turma/i.test(limiteMsg ?? "") ? "Fora das regras do seu plano" : /mês/i.test(limiteMsg ?? "") ? "Limite mensal do plano atingido" : "Limite semanal do plano atingido"}</AlertDialogTitle>
             <AlertDialogDescription>{limiteMsg}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

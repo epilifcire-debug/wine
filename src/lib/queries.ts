@@ -59,6 +59,8 @@ export type Plano = {
   ativo: boolean;
   /** Dias liberados, 1 = segunda ... 7 = domingo. Vazio/nulo = todos. */
   dias_permitidos?: number[] | null;
+  /** Dias de acesso livre ao espaço, sem reserva de aula (ex.: sábado do Flagship). */
+  dias_acesso_livre?: number[] | null;
   /** Turmas (modalidades) liberadas. Vazio/nulo = todas. */
   modalidades_permitidas?: string[] | null;
   /** Valor da renovação com desconto (só trimestrais). */
