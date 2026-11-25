@@ -82,6 +82,44 @@ const alunoGroups: NavigationGroup[] = [
   },
 ];
 
+/** Abas fixas do aluno no celular (o menu lateral continua com o resto). */
+const alunoTabs: NavigationItem[] = [
+  { to: "/app", label: "Início", icon: Home },
+  { to: "/agenda", label: "Agenda", icon: CalendarDays },
+  { to: "/checkin", label: "Check-in", icon: CheckCircle2 },
+  { to: "/perfil", label: "Perfil", icon: User },
+];
+
+function BottomNav({ path }: { path: string }) {
+  return (
+    <nav
+      aria-label="Navegação principal"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background md:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <ul className="grid h-16 grid-cols-4">
+        {alunoTabs.map((t) => {
+          const ativo = path === t.to || path.startsWith(`${t.to}/`);
+          const Icon = t.icon;
+          return (
+            <li key={t.to}>
+              <Link
+                to={t.to}
+                aria-current={ativo ? "page" : undefined}
+                className={`relative flex h-full flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors ${ativo ? "text-primary" : "text-muted-foreground"}`}
+              >
+                {ativo && <span className="absolute inset-x-6 top-0 h-0.5 rounded-full bg-primary" aria-hidden="true" />}
+                <Icon className="size-5" aria-hidden="true" />
+                {t.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 const professorGroups: NavigationGroup[] = [
   {
     label: "Professor",
@@ -245,6 +283,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         : alunoGroups;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const mostrarAbas = !loading && !isAdmin && !isProfessor;
 
   useEffect(() => {
     const desktop = window.matchMedia("(min-width: 1280px)").matches;
@@ -290,7 +329,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
             <div className="flex shrink-0 items-center gap-1">
               {!isAdmin && (
-                <Button variant="ghost" size="icon" asChild aria-label="Abrir perfil">
+                <Button variant="ghost" size="icon" asChild aria-label="Abrir perfil" className={mostrarAbas ? "hidden md:inline-flex" : undefined}>
                   <Link to="/perfil">
                     <User className="size-4" />
                   </Link>
@@ -306,9 +345,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8">
+        <main
+          className={`mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8 ${mostrarAbas ? "pb-28 md:pb-5" : ""}`}
+        >
           {children}
         </main>
+        {mostrarAbas && <BottomNav path={path} />}
       </SidebarInset>
     </SidebarProvider>
   );
