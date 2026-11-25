@@ -1,6 +1,6 @@
 DISPLAY_NAME=Wine Barbell Club
 DESCRIPTION=App do Wine Barbell Club (aulas, planos, check-in)
-MAIN=start.mjs
+MAIN=index.js
 MEMORY=1536
 VERSION=LATEST
 SUBDOMAIN=winebarbellclub

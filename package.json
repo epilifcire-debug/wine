@@ -1,5 +1,5 @@
 {
-  "version": "1.9.3",
+  "version": "1.9.4",
   "name": "tanstack_start_ts",
   "private": true,
   "sideEffects": false,
@@ -89,5 +89,5 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^8.1.5"
   },
-  "main": "start.mjs"
+  "main": "index.js"
 }
