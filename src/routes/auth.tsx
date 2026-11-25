@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { cadastrarConta, entrarComUsuario } from "@/lib/auth-usuario.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -36,6 +38,9 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [nome, setNome] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const loginUsuario = useServerFn(entrarComUsuario);
+  const cadastrar = useServerFn(cadastrarConta);
   const [busy, setBusy] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
@@ -48,25 +53,24 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-        if (error) throw error;
+        const login = email.trim();
+        if (login.includes("@")) {
+          const { error } = await supabase.auth.signInWithPassword({ email: login, password: senha });
+          if (error) throw error;
+        } else {
+          const sessao = await loginUsuario({ data: { usuario: login, senha } });
+          const { error } = await supabase.auth.setSession(sessao);
+          if (error) throw error;
+        }
         navigate({ to: "/app", replace: true });
       } else if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password: senha,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { nome },
-          },
+        const sessao = await cadastrar({
+          data: { nome, usuario, email: email.trim(), senha },
         });
+        const { error } = await supabase.auth.setSession(sessao);
         if (error) throw error;
-        if (!data.session) {
-          setEnviado(true);
-          toast.success("Confira seu e-mail para confirmar o cadastro.");
-        } else {
-          navigate({ to: "/app", replace: true });
-        }
+        toast.success("Conta criada! Bem-vindo ao Wine Barbell Club.");
+        navigate({ to: "/app", replace: true });
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -76,10 +80,16 @@ function AuthPage() {
         toast.success("Enviamos um link de recuperação para seu e-mail.");
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro inesperado";
+      let msg = err instanceof Error ? err.message : "Erro inesperado";
+      try {
+        const zod = JSON.parse(msg);
+        if (Array.isArray(zod) && zod[0]?.message) msg = zod[0].message;
+      } catch {
+        /* mensagem comum */
+      }
       toast.error(
         msg.includes("Invalid login")
-          ? "E-mail ou senha incorretos."
+          ? "Usuário, e-mail ou senha incorretos."
           : msg.includes("already registered")
             ? "Este e-mail já está cadastrado."
             : msg,
@@ -118,7 +128,7 @@ function AuthPage() {
         />
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          Acesse sua conta
+          {mode === "signup" ? "Crie sua conta" : mode === "reset" ? "Recupere sua senha" : "Acesse sua conta"}
         </p>
 
         {enviado ? (
@@ -153,18 +163,41 @@ function AuthPage() {
                   />
                 </div>
               )}
+              {mode === "signup" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="usuario">Nome de usuário</Label>
+                  <Input
+                    id="usuario"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    value={usuario}
+                    onChange={(e) => setUsuario(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ""))}
+                    required
+                    minLength={3}
+                    maxLength={20}
+                    placeholder="ex.: joao.silva"
+                  />
+                  <p className="text-[11px] text-muted-foreground">Use para entrar. Letras, números, ponto ou _.</p>
+                </div>
+              )}
               <div className="space-y-1.5">
-                <Label htmlFor="email">E-mail</Label>
+                <Label htmlFor="email">
+                  {mode === "login" ? "Usuário ou e-mail" : mode === "signup" ? "E-mail (opcional)" : "E-mail"}
+                </Label>
                 <Input
                   id="email"
-                  type="email"
-                  autoComplete="email"
+                  type={mode === "login" ? "text" : "email"}
+                  autoComplete={mode === "login" ? "username" : "email"}
+                  autoCapitalize="none"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
+                  required={mode !== "signup"}
                   maxLength={255}
-                  placeholder="voce@email.com"
+                  placeholder={mode === "login" ? "usuário ou voce@email.com" : "voce@email.com"}
                 />
+                {mode === "signup" && (
+                  <p className="text-[11px] text-muted-foreground">Sem e-mail, a recuperação de senha é feita pela administração.</p>
+                )}
               </div>
               {mode !== "reset" && (
                 <div className="space-y-1.5">

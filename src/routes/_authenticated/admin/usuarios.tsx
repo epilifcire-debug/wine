@@ -91,6 +91,7 @@ function UsuariosAdmin() {
               <p className="font-mono text-[11px] tracking-wide text-primary">
                 {u.codigo_wbc ?? "sem ID"}
               </p>
+              {u.username && <p className="text-xs text-foreground">@{u.username}</p>}
               <p className="text-xs text-muted-foreground">{u.email}</p>
               {u.telefone && (
                 <p className="text-xs text-muted-foreground">{maskTelefone(u.telefone)}</p>

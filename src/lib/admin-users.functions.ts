@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { emailVisivel } from "@/lib/auth-usuario.functions";
 
 export const ADMIN_MASTER_EMAIL = "epilif.cire@gmail.com";
 
@@ -10,6 +11,7 @@ export type UsuarioAdmin = {
   nome: string;
   telefone: string | null;
   codigo_wbc: string | null;
+  username: string | null;
   perfil: "admin_master" | "admin" | "professor" | "aluno";
   status: string;
   criado_em: string;
@@ -36,7 +38,7 @@ export const listarUsuarios = createServerFn({ method: "GET" })
 
     const [{ data: roles }, { data: profiles }, { data: alunos }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role"),
-      supabaseAdmin.from("profiles").select("id, nome, telefone, codigo_wbc"),
+      supabaseAdmin.from("profiles").select("id, nome, telefone, codigo_wbc, username"),
       supabaseAdmin.from("alunos").select("user_id, nome, telefone, ativo"),
     ]);
 
@@ -62,10 +64,11 @@ export const listarUsuarios = createServerFn({ method: "GET" })
       const a = alunoMap.get(u.id);
       return {
         id: u.id,
-        email: u.email ?? "—",
+        email: emailVisivel(u.email) ?? "Sem e-mail",
         nome: p?.nome || a?.nome || (u.email ?? "").split("@")[0],
         telefone: p?.telefone ?? a?.telefone ?? null,
         codigo_wbc: p?.codigo_wbc ?? null,
+        username: (p as any)?.username ?? null,
         perfil,
         status: a?.ativo === false ? "Inativo" : "Ativo",
         criado_em: u.created_at,
@@ -157,7 +160,7 @@ export const listarAlunos = createServerFn({ method: "GET" })
       await Promise.all([
         supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
         supabaseAdmin.from("user_roles").select("user_id, role"),
-        supabaseAdmin.from("profiles").select("id, nome, telefone, codigo_wbc"),
+        supabaseAdmin.from("profiles").select("id, nome, telefone, codigo_wbc, username"),
         supabaseAdmin.from("alunos").select("*"),
       ]);
     if (uErr) throw uErr;
@@ -188,7 +191,7 @@ export const listarAlunos = createServerFn({ method: "GET" })
         id: a?.id ?? null,
         user_id: u.id,
         nome: a?.nome || p?.nome || (u.email ?? "").split("@")[0],
-        email: a?.email ?? u.email ?? null,
+        email: a?.email ?? emailVisivel(u.email),
         telefone: a?.telefone ?? p?.telefone ?? null,
         codigo_wbc: p?.codigo_wbc ?? a?.codigo_wbc ?? null,
         genero: a?.genero ?? null,
@@ -255,7 +258,7 @@ export const listarContasSemFicha = createServerFn({ method: "GET" })
       .filter((u) => (u.email ?? "").toLowerCase() !== ADMIN_MASTER_EMAIL)
       .map((u) => ({
         id: u.id,
-        email: u.email ?? "—",
+        email: emailVisivel(u.email) ?? "Sem e-mail",
         nome:
           (u.user_metadata?.nome as string) ||
           (u.user_metadata?.full_name as string) ||

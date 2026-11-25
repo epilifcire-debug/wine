@@ -756,6 +756,7 @@ export type Database = {
           nome: string
           telefone: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           codigo_wbc?: string | null
@@ -765,6 +766,7 @@ export type Database = {
           nome?: string
           telefone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           codigo_wbc?: string | null
@@ -774,6 +776,7 @@ export type Database = {
           nome?: string
           telefone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
