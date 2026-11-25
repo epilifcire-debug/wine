@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminNotificacoesRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminPlanosRouteImport } from './routes/_authenticated/admin/planos'
 import { Route as AuthenticatedAdminTreinosRouteImport } from './routes/_authenticated/admin/treinos'
 import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
+import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin/whatsapp'
 import { Route as AuthenticatedModalidadesIndexRouteImport } from './routes/_authenticated/modalidades/index'
 import { Route as AuthenticatedModalidadesIdRouteImport } from './routes/_authenticated/modalidades/$id'
 import { Route as AuthenticatedProfessorAulasRouteImport } from './routes/_authenticated/professor/aulas'
@@ -43,6 +44,7 @@ import { Route as ApiPublicWhatsappHealthRouteImport } from './routes/api/public
 import { Route as ApiPublicWhatsappNotificacoesRouteImport } from './routes/api/public/whatsapp/notificacoes'
 import { Route as ApiPublicWhatsappOportunidadesRouteImport } from './routes/api/public/whatsapp/oportunidades'
 import { Route as ApiPublicWhatsappReservasRouteImport } from './routes/api/public/whatsapp/reservas'
+import { Route as ApiPublicWhatsappStatusRouteImport } from './routes/api/public/whatsapp/status'
 import { Route as ApiPublicWhatsappNotificacoesReserva_idRouteImport } from './routes/api/public/whatsapp/notificacoes/$reserva_id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -192,6 +194,12 @@ const AuthenticatedAdminUsuariosRoute =
     path: '/admin/usuarios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminWhatsappRoute =
+  AuthenticatedAdminWhatsappRouteImport.update({
+    id: '/admin/whatsapp',
+    path: '/admin/whatsapp',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedModalidadesIndexRoute =
   AuthenticatedModalidadesIndexRouteImport.update({
     id: '/modalidades/',
@@ -233,6 +241,11 @@ const ApiPublicWhatsappReservasRoute =
     path: '/api/public/whatsapp/reservas',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicWhatsappStatusRoute = ApiPublicWhatsappStatusRouteImport.update({
+  id: '/api/public/whatsapp/status',
+  path: '/api/public/whatsapp/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWhatsappNotificacoesReserva_idRoute =
   ApiPublicWhatsappNotificacoesReserva_idRouteImport.update({
     id: '/$reserva_id',
@@ -266,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/admin/planos': typeof AuthenticatedAdminPlanosRoute
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/modalidades/$id': typeof AuthenticatedModalidadesIdRoute
   '/professor/aulas': typeof AuthenticatedProfessorAulasRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -274,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/api/public/whatsapp/notificacoes': typeof ApiPublicWhatsappNotificacoesRouteWithChildren
   '/api/public/whatsapp/oportunidades': typeof ApiPublicWhatsappOportunidadesRoute
   '/api/public/whatsapp/reservas': typeof ApiPublicWhatsappReservasRoute
+  '/api/public/whatsapp/status': typeof ApiPublicWhatsappStatusRoute
   '/api/public/whatsapp/notificacoes/$reserva_id': typeof ApiPublicWhatsappNotificacoesReserva_idRoute
 }
 export interface FileRoutesByTo {
@@ -302,6 +317,7 @@ export interface FileRoutesByTo {
   '/admin/planos': typeof AuthenticatedAdminPlanosRoute
   '/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/modalidades/$id': typeof AuthenticatedModalidadesIdRoute
   '/professor/aulas': typeof AuthenticatedProfessorAulasRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -310,6 +326,7 @@ export interface FileRoutesByTo {
   '/api/public/whatsapp/notificacoes': typeof ApiPublicWhatsappNotificacoesRouteWithChildren
   '/api/public/whatsapp/oportunidades': typeof ApiPublicWhatsappOportunidadesRoute
   '/api/public/whatsapp/reservas': typeof ApiPublicWhatsappReservasRoute
+  '/api/public/whatsapp/status': typeof ApiPublicWhatsappStatusRoute
   '/api/public/whatsapp/notificacoes/$reserva_id': typeof ApiPublicWhatsappNotificacoesReserva_idRoute
 }
 export interface FileRoutesById {
@@ -340,6 +357,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/planos': typeof AuthenticatedAdminPlanosRoute
   '/_authenticated/admin/treinos': typeof AuthenticatedAdminTreinosRoute
   '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
   '/_authenticated/modalidades/$id': typeof AuthenticatedModalidadesIdRoute
   '/_authenticated/professor/aulas': typeof AuthenticatedProfessorAulasRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -348,6 +366,7 @@ export interface FileRoutesById {
   '/api/public/whatsapp/notificacoes': typeof ApiPublicWhatsappNotificacoesRouteWithChildren
   '/api/public/whatsapp/oportunidades': typeof ApiPublicWhatsappOportunidadesRoute
   '/api/public/whatsapp/reservas': typeof ApiPublicWhatsappReservasRoute
+  '/api/public/whatsapp/status': typeof ApiPublicWhatsappStatusRoute
   '/api/public/whatsapp/notificacoes/$reserva_id': typeof ApiPublicWhatsappNotificacoesReserva_idRoute
 }
 export interface FileRouteTypes {
@@ -378,6 +397,7 @@ export interface FileRouteTypes {
     | '/admin/planos'
     | '/admin/treinos'
     | '/admin/usuarios'
+    | '/admin/whatsapp'
     | '/modalidades/$id'
     | '/professor/aulas'
     | '/admin/'
@@ -386,6 +406,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp/notificacoes'
     | '/api/public/whatsapp/oportunidades'
     | '/api/public/whatsapp/reservas'
+    | '/api/public/whatsapp/status'
     | '/api/public/whatsapp/notificacoes/$reserva_id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -414,6 +435,7 @@ export interface FileRouteTypes {
     | '/admin/planos'
     | '/admin/treinos'
     | '/admin/usuarios'
+    | '/admin/whatsapp'
     | '/modalidades/$id'
     | '/professor/aulas'
     | '/admin'
@@ -422,6 +444,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp/notificacoes'
     | '/api/public/whatsapp/oportunidades'
     | '/api/public/whatsapp/reservas'
+    | '/api/public/whatsapp/status'
     | '/api/public/whatsapp/notificacoes/$reserva_id'
   id:
     | '__root__'
@@ -451,6 +474,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/planos'
     | '/_authenticated/admin/treinos'
     | '/_authenticated/admin/usuarios'
+    | '/_authenticated/admin/whatsapp'
     | '/_authenticated/modalidades/$id'
     | '/_authenticated/professor/aulas'
     | '/_authenticated/admin/'
@@ -459,6 +483,7 @@ export interface FileRouteTypes {
     | '/api/public/whatsapp/notificacoes'
     | '/api/public/whatsapp/oportunidades'
     | '/api/public/whatsapp/reservas'
+    | '/api/public/whatsapp/status'
     | '/api/public/whatsapp/notificacoes/$reserva_id'
   fileRoutesById: FileRoutesById
 }
@@ -472,6 +497,7 @@ export interface RootRouteChildren {
   ApiPublicWhatsappNotificacoesRoute: typeof ApiPublicWhatsappNotificacoesRouteWithChildren
   ApiPublicWhatsappOportunidadesRoute: typeof ApiPublicWhatsappOportunidadesRoute
   ApiPublicWhatsappReservasRoute: typeof ApiPublicWhatsappReservasRoute
+  ApiPublicWhatsappStatusRoute: typeof ApiPublicWhatsappStatusRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -665,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin/whatsapp': {
+      id: '/_authenticated/admin/whatsapp'
+      path: '/admin/whatsapp'
+      fullPath: '/admin/whatsapp'
+      preLoaderRoute: typeof AuthenticatedAdminWhatsappRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/modalidades/': {
       id: '/_authenticated/modalidades/'
       path: '/modalidades'
@@ -714,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWhatsappReservasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/whatsapp/status': {
+      id: '/api/public/whatsapp/status'
+      path: '/api/public/whatsapp/status'
+      fullPath: '/api/public/whatsapp/status'
+      preLoaderRoute: typeof ApiPublicWhatsappStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/whatsapp/notificacoes/$reserva_id': {
       id: '/api/public/whatsapp/notificacoes/$reserva_id'
       path: '/$reserva_id'
@@ -746,6 +786,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminPlanosRoute: typeof AuthenticatedAdminPlanosRoute
   AuthenticatedAdminTreinosRoute: typeof AuthenticatedAdminTreinosRoute
   AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
+  AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
   AuthenticatedModalidadesIdRoute: typeof AuthenticatedModalidadesIdRoute
   AuthenticatedProfessorAulasRoute: typeof AuthenticatedProfessorAulasRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -774,6 +815,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminPlanosRoute: AuthenticatedAdminPlanosRoute,
   AuthenticatedAdminTreinosRoute: AuthenticatedAdminTreinosRoute,
   AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
+  AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
   AuthenticatedModalidadesIdRoute: AuthenticatedModalidadesIdRoute,
   AuthenticatedProfessorAulasRoute: AuthenticatedProfessorAulasRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -809,6 +851,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPublicWhatsappNotificacoesRouteWithChildren,
   ApiPublicWhatsappOportunidadesRoute: ApiPublicWhatsappOportunidadesRoute,
   ApiPublicWhatsappReservasRoute: ApiPublicWhatsappReservasRoute,
+  ApiPublicWhatsappStatusRoute: ApiPublicWhatsappStatusRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

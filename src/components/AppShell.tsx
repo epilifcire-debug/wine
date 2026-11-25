@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   Moon,
   PartyPopper,
   ReceiptText,
@@ -160,6 +161,7 @@ const masterGroups: NavigationGroup[] = [
     label: "Administração Master",
     items: [
       { to: "/admin/usuarios", label: "Usuários e perfis", icon: ShieldCheck },
+      { to: "/admin/whatsapp", label: "WhatsApp do bot", icon: MessageCircle },
       { to: "/admin/modalidades", label: "Configurações", icon: Settings },
     ],
   },
