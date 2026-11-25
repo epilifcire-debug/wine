@@ -220,12 +220,24 @@ function Dashboard() {
           <EmptyState>Nenhum comunicado por enquanto.</EmptyState>
         ) : (
           <div className="space-y-2">
-            {avisos.slice(0, 3).map((n: any) => (
-              <article key={n.id} className="surface-panel px-4 py-3">
-                <h2 className="text-sm font-semibold text-foreground">{n.titulo}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">{n.mensagem}</p>
-              </article>
-            ))}
+            {avisos.slice(0, 3).map((n: any) =>
+              n.evento_id ? (
+                <Link
+                  key={n.id}
+                  to="/eventos"
+                  className="surface-panel block px-4 py-3 transition-colors hover:border-primary"
+                >
+                  <h2 className="text-sm font-semibold text-foreground">{n.titulo}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">{n.mensagem}</p>
+                  <p className="mt-1 text-xs font-semibold text-primary">Ver evento</p>
+                </Link>
+              ) : (
+                <article key={n.id} className="surface-panel px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">{n.titulo}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">{n.mensagem}</p>
+                </article>
+              ),
+            )}
           </div>
         )}
       </section>
