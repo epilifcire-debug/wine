@@ -47,6 +47,27 @@ function AuthPage() {
     if (!authLoading && session) navigate({ to: "/app", replace: true });
   }, [authLoading, session, navigate]);
 
+  // Volta do Google: tira código/token do endereço assim que a sessão existe.
+  useEffect(() => {
+    if (!session) return;
+    const url = new URL(window.location.href);
+    if (url.hash.includes("access_token") || url.searchParams.has("code")) {
+      url.hash = "";
+      url.searchParams.delete("code");
+      window.history.replaceState(null, "", url.pathname + url.search);
+    }
+  }, [session]);
+
+  // Erro na volta do Google (ex.: acesso negado).
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const erro = url.searchParams.get("error_description") ?? new URLSearchParams(url.hash.slice(1)).get("error_description");
+    if (erro) {
+      toast.error("Não foi possível entrar com o Google.");
+      window.history.replaceState(null, "", url.pathname);
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -106,7 +127,7 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/app` },
+      options: { redirectTo: `${window.location.origin}/auth` },
     });
     if (error) {
       toast.error("Não foi possível entrar com o Google.");

@@ -52,6 +52,9 @@ function createSupabaseClient() {
       storage: brokeredPreviewStorage(),
       persistSession: true,
       autoRefreshToken: true,
+      // Retorno do Google com código de uso único (não expõe o token na URL).
+      flowType: 'pkce',
+      detectSessionInUrl: true,
     }
   });
 }
