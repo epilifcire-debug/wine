@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -56,6 +57,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -237,6 +243,7 @@ const ApiPublicWhatsappNotificacoesReserva_idRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/health': typeof HealthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/app': typeof AuthenticatedAppRoute
@@ -272,6 +279,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/health': typeof HealthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/agenda': typeof AuthenticatedAgendaRoute
   '/app': typeof AuthenticatedAppRoute
@@ -309,6 +317,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/health': typeof HealthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/app': typeof AuthenticatedAppRoute
@@ -346,6 +355,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/health'
     | '/reset-password'
     | '/agenda'
     | '/app'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/health'
     | '/reset-password'
     | '/agenda'
     | '/app'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/health'
     | '/reset-password'
     | '/_authenticated/agenda'
     | '/_authenticated/app'
@@ -454,6 +466,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  HealthRoute: typeof HealthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicWhatsappHealthRoute: typeof ApiPublicWhatsappHealthRoute
   ApiPublicWhatsappNotificacoesRoute: typeof ApiPublicWhatsappNotificacoesRouteWithChildren
@@ -482,6 +495,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -782,6 +802,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  HealthRoute: HealthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicWhatsappHealthRoute: ApiPublicWhatsappHealthRoute,
   ApiPublicWhatsappNotificacoesRoute:
