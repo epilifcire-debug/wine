@@ -108,7 +108,7 @@ function PlanosAluno() {
   const avulsos = ativos.filter((p) => p.tipo === "avulso");
 
   const { data: dayUses = [] } = useQuery({
-    queryKey: ["day-uses", aluno?.id],
+    queryKey: ["day-uses", "lista", aluno?.id],
     enabled: Boolean(aluno?.id),
     queryFn: async () => {
       const { data, error } = await supabase

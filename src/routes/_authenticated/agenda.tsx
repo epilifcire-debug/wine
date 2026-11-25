@@ -105,7 +105,7 @@ function Agenda() {
   );
 
   const { data: dayUsesDisponiveis = 0, isPending: dayUsesPendentes } = useQuery({
-    queryKey: ["day-uses", aluno?.id],
+    queryKey: ["day-uses", "disponiveis", aluno?.id],
     enabled: Boolean(aluno?.id),
     queryFn: async () => {
       const { count, error } = await supabase
