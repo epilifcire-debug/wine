@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { MSG_NO_PLAN } from "@/lib/booking";
-import { fetchContratos, fetchPlanos, precoBRL, qk, statusContrato, type Plano } from "@/lib/queries";
+import { fetchContratos, fetchPlanos, precoBRL, qk, situacaoRecorrencia, statusContrato, type Plano } from "@/lib/queries";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -56,6 +56,7 @@ function PlanosAluno() {
   const meuPlanoId = aluno?.plano_id ?? undefined;
   const qc = useQueryClient();
   const [confirmar, setConfirmar] = useState<Plano | null>(null);
+  const [querRecorrencia, setQuerRecorrencia] = useState(false);
   const { data: contratos = [] } = useQuery({
     queryKey: qk.contratos(aluno?.id), queryFn: () => fetchContratos(aluno?.id), enabled: Boolean(aluno?.id),
     refetchInterval: 15000,
@@ -66,8 +67,8 @@ function PlanosAluno() {
     Boolean(c.proximo_vencimento && c.proximo_vencimento >= new Date().toISOString().slice(0, 10)));
 
   const aderir = useMutation({
-    mutationFn: async (plano: Plano) => {
-      const { error } = await supabase.rpc("ativar_plano" as never, {
+    mutationFn: async ({ plano, recorrencia }: { plano: Plano; recorrencia: boolean }) => {
+      const { data: contratoId, error } = await supabase.rpc("ativar_plano" as never, {
         p_plano_id: plano.id,
       } as never);
       if (error) {
@@ -78,6 +79,13 @@ function PlanosAluno() {
           throw new Error("Não foi possível localizar sua ficha de aluno.");
         }
         throw error;
+      }
+      if (contratoId) {
+        const { error: recErr } = await supabase.rpc("solicitar_recorrencia" as never, {
+          p_aluno_plano_id: contratoId,
+          p_solicitar: recorrencia,
+        } as never);
+        if (recErr) throw new Error("Plano selecionado, mas não foi possível registrar a recorrência. Fale com a administração.");
       }
     },
     onSuccess: async () => {
@@ -143,6 +151,9 @@ function PlanosAluno() {
           <p className="eyebrow">Plano selecionado · Aguardando pagamento</p>
           <p className="mt-2 font-display text-xl text-foreground">{pendente.planos?.nome ?? planos.find((p) => p.id === pendente.plano_id)?.nome}</p>
           <p className="text-primary">{precoBRL(pendente.valor_centavos)}</p>
+          {situacaoRecorrencia(pendente) && (
+            <p className="mt-1 text-xs font-semibold text-primary">{situacaoRecorrencia(pendente)!.label}</p>
+          )}
           <p className="mt-2 text-sm text-muted-foreground">Para liberar totalmente o seu plano, por gentileza faça primeiro o pagamento. Procure a administração do Wine Barbell Club para realizar/confirmar o pagamento.</p>
         </section>
       )}
@@ -152,6 +163,9 @@ function PlanosAluno() {
           <p className="mt-2 font-display text-xl text-foreground">{vigente.planos?.nome}</p>
           <p className="text-sm text-muted-foreground">Início: {formatDateBR(vigente.data_inicio)} · Vencimento: {formatDateBR(vigente.proximo_vencimento)}</p>
           <p className="text-primary">{precoBRL(vigente.valor_centavos)}</p>
+          {situacaoRecorrencia(vigente) && (
+            <p className="mt-1 text-xs font-semibold text-primary">{situacaoRecorrencia(vigente)!.label}</p>
+          )}
         </section>
       )}
       {!isAdmin && !meuPlanoId && !pendente && (
@@ -177,7 +191,10 @@ function PlanosAluno() {
                   <Button
                     className="mt-auto w-full"
                     disabled={aderir.isPending}
-                    onClick={() => setConfirmar(p)}
+                    onClick={() => {
+                      setQuerRecorrencia(false);
+                      setConfirmar(p);
+                    }}
                   >
                     {meuPlanoId ? "Mudar para este plano" : "Escolher este plano"}
                   </Button>
@@ -196,11 +213,27 @@ function PlanosAluno() {
               {precoBRL(confirmar?.preco_centavos)} · O plano ficará aguardando pagamento. Procure a administração do Wine Barbell Club para confirmar o pagamento antes de reservar aulas.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {confirmar?.preco_recorrencia_centavos ? (
+            <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border px-3 py-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 accent-[var(--primary)]"
+                checked={querRecorrencia}
+                onChange={(e) => setQuerRecorrencia(e.target.checked)}
+              />
+              <span>
+                <span className="font-medium text-foreground">Deixar recorrente no cartão de crédito</span>
+                <span className="block text-xs text-muted-foreground">
+                  Renovação por {precoBRL(confirmar.preco_recorrencia_centavos)}. A administração ativa a recorrência depois de configurar a cobrança.
+                </span>
+              </span>
+            </label>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (confirmar) aderir.mutate(confirmar);
+                if (confirmar) aderir.mutate({ plano: confirmar, recorrencia: querRecorrencia });
                 setConfirmar(null);
               }}
             >

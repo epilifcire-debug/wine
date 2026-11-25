@@ -15,6 +15,7 @@ import {
   statusContrato,
   statusLabel,
   type Contrato,
+  situacaoRecorrencia,
 } from "@/lib/queries";
 import { formatDateBR } from "@/lib/format";
 import { AdminGuard } from "@/components/AdminGuard";
@@ -142,6 +143,25 @@ function AdminFinanceiro() {
     enabled: Boolean(alunoId),
   });
 
+  const recorrencia = useMutation({
+    mutationFn: async ({ contrato, ativa }: { contrato: Contrato; ativa: boolean }) => {
+      const { error } = await supabase.rpc("definir_recorrencia" as never, {
+        p_aluno_plano_id: contrato.id,
+        p_ativa: ativa,
+      } as never);
+      if (error) throw error;
+      return ativa;
+    },
+    onSuccess: async (ativa) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: qk.contratos(alunoId ?? undefined) }),
+        qc.invalidateQueries({ queryKey: qk.contratos() }),
+      ]);
+      toast.success(ativa ? "Recorrência no cartão ativada." : "Recorrência desativada.");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const pagar = useMutation({
     mutationFn: async (contrato: Contrato) => {
       const { error } = await supabase.rpc("registrar_pagamento_presencial", { p_aluno_plano_id: contrato.id });
@@ -252,6 +272,21 @@ function AdminFinanceiro() {
                           )}
                         </div>
                       </div>
+                      {c.status !== "cancelado" && (c.recorrencia_solicitada || c.recorrencia_ativa) && (
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-2">
+                          <span className={`text-xs font-semibold ${c.recorrencia_ativa ? "text-primary" : "text-muted-foreground"}`}>
+                            {situacaoRecorrencia(c)?.label}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant={c.recorrencia_ativa ? "outline" : "default"}
+                            disabled={recorrencia.isPending}
+                            onClick={() => recorrencia.mutate({ contrato: c, ativa: !c.recorrencia_ativa })}
+                          >
+                            {c.recorrencia_ativa ? "Desativar recorrência" : "Ativar recorrência"}
+                          </Button>
+                        </div>
+                      )}
                       {c.observacao && (
                         <p className="mt-2 text-xs text-muted-foreground">{c.observacao}</p>
                       )}

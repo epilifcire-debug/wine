@@ -348,7 +348,20 @@ export type Contrato = {
   observacao: string | null;
   created_at: string;
   planos?: { nome: string } | null;
+  /** Aluno pediu para deixar recorrente no cartão. */
+  recorrencia_solicitada?: boolean;
+  /** Admin ativou a chave da recorrência. */
+  recorrencia_ativa?: boolean;
+  recorrencia_ativada_em?: string | null;
 };
+
+/** Sinalizador de recorrência do contrato, ou null se não houver. */
+export function situacaoRecorrencia(c?: Pick<Contrato, "recorrencia_solicitada" | "recorrencia_ativa"> | null) {
+  if (!c) return null;
+  if (c.recorrencia_ativa) return { ativa: true, label: "Recorrente no cartão" } as const;
+  if (c.recorrencia_solicitada) return { ativa: false, label: "Recorrência aguardando ativação" } as const;
+  return null;
+}
 
 export const eventoLabel: Record<PlanoEvento, string> = {
   contratacao: "Contratação",

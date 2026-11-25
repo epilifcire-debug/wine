@@ -10,6 +10,7 @@ import {
   fetchTodosContratos,
   mapaContratos,
   qk,
+  situacaoRecorrencia,
   statusContrato,
 } from "@/lib/queries";
 import { useAuth } from "@/lib/auth";
@@ -143,6 +144,13 @@ function AdminAlunos() {
     queryFn: fetchTodosContratos,
   });
   const contratoPorAluno = mapaContratos(contratos as any);
+  // Sinalizador de recorrência: contrato mais recente (pendente ou vigente) com recorrência.
+  const recorrenciaPorAluno = new Map<string, ReturnType<typeof situacaoRecorrencia>>();
+  for (const c of contratos as any[]) {
+    if (recorrenciaPorAluno.has(c.aluno_id) || c.status === "cancelado") continue;
+    const sit = situacaoRecorrencia(c);
+    if (sit) recorrenciaPorAluno.set(c.aluno_id, sit);
+  }
 
   const listarContas = useServerFn(listarContasSemFicha);
   const relatorio = useServerFn(relatorioAlunos);
@@ -368,6 +376,13 @@ function AdminAlunos() {
                       <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                         {rotuloStatus(a)}
                       </span>
+                      {a.id && recorrenciaPorAluno.get(a.id) && (
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${recorrenciaPorAluno.get(a.id)!.ativa ? "bg-primary/15 text-primary" : "border border-primary/40 text-primary"}`}
+                        >
+                          {recorrenciaPorAluno.get(a.id)!.label}
+                        </span>
+                      )}
                       {!a.user_id && (
                         <span className="rounded-full border border-primary/40 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
                           Conta não vinculada

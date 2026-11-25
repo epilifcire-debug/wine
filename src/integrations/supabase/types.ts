@@ -24,6 +24,10 @@ export type Database = {
           observacao: string | null
           plano_id: string | null
           proximo_vencimento: string | null
+          recorrencia_ativa: boolean
+          recorrencia_ativada_em: string | null
+          recorrencia_ativada_por: string | null
+          recorrencia_solicitada: boolean
           status: Database["public"]["Enums"]["contrato_status"]
           updated_at: string
           valor_centavos: number
@@ -37,6 +41,10 @@ export type Database = {
           observacao?: string | null
           plano_id?: string | null
           proximo_vencimento?: string | null
+          recorrencia_ativa?: boolean
+          recorrencia_ativada_em?: string | null
+          recorrencia_ativada_por?: string | null
+          recorrencia_solicitada?: boolean
           status?: Database["public"]["Enums"]["contrato_status"]
           updated_at?: string
           valor_centavos?: number
@@ -50,6 +58,10 @@ export type Database = {
           observacao?: string | null
           plano_id?: string | null
           proximo_vencimento?: string | null
+          recorrencia_ativa?: boolean
+          recorrencia_ativada_em?: string | null
+          recorrencia_ativada_por?: string | null
+          recorrencia_solicitada?: boolean
           status?: Database["public"]["Enums"]["contrato_status"]
           updated_at?: string
           valor_centavos?: number
