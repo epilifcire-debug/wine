@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { supabase } from "@/integrations/supabase/client";
+import { PwaManager } from "@/lib/pwa";
 
 function NotFoundComponent() {
   return (
@@ -115,7 +116,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600&display=swap",
       },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/icons/icon-192.png" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
     ],
   }),
@@ -159,6 +160,7 @@ function RootComponent() {
       <ThemeProvider>
         <AuthProvider>
           <AuthSync />
+          <PwaManager />
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <Toaster position="top-center" theme="dark" richColors />

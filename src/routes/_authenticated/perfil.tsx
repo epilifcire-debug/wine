@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { emailVisivel } from "@/lib/auth-usuario.functions";
+import { useInstalarApp } from "@/lib/pwa";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ function Perfil() {
     contato_emergencia: (aluno as any)?.contato_emergencia ?? "",
     observacoes: (aluno as any)?.observacoes ?? "",
   });
+  const app = useInstalarApp();
   const [novaSenha, setNovaSenha] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -314,6 +316,24 @@ function Perfil() {
           </button>
         </div>
       </section>
+
+      {(app.podeInstalar || app.mostrarDicaIOS) && (
+        <section className="surface-panel flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <div className="min-w-0">
+            <p className="font-medium text-foreground">Instalar o app no celular</p>
+            <p className="text-xs text-muted-foreground">
+              {app.podeInstalar
+                ? "Abra o Wine Barbell Club direto da tela inicial, como um aplicativo."
+                : "No Safari, toque em Compartilhar e depois em “Adicionar à Tela de Início”."}
+            </p>
+          </div>
+          {app.podeInstalar && (
+            <Button type="button" size="sm" onClick={() => app.instalar()}>
+              Instalar
+            </Button>
+          )}
+        </section>
+      )}
 
       <form onSubmit={salvar} className="surface-panel space-y-4 px-5 py-4">
         <p className="eyebrow">Meus dados</p>
