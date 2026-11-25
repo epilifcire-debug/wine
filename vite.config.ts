@@ -16,7 +16,15 @@ function commitAtual() {
   try {
     return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
   } catch {
-    return "local";
+    // Sem .git (ex.: Shard Cloud): usa a data e hora do build em Brasília.
+    const agora = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date());
+    return `build ${agora.replace(",", "")}`;
   }
 }
 
