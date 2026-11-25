@@ -21,6 +21,6 @@ if (forcar || !existsSync(SERVIDOR)) {
 }
 
 process.env.HOST ??= "0.0.0.0";
-process.env.PORT ??= "8080";
+process.env.PORT ??= "80";
 console.log(`[start] servidor na porta ${process.env.PORT}`);
 await import(`./${SERVIDOR}`);
