@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { definirPerfil, listarUsuarios, type UsuarioAdmin } from "@/lib/admin-users.functions";
+import { RedefinirSenhaButton } from "@/components/RedefinirSenhaButton";
 import { maskTelefone } from "@/lib/format";
 import {
   Select,
@@ -117,6 +118,11 @@ function UsuariosAdmin() {
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+                {u.perfil !== "admin_master" && (
+                  <div className="mt-2">
+                    <RedefinirSenhaButton userId={u.id} nome={u.nome} variante="texto" />
+                  </div>
                 )}
               </div>
             </div>

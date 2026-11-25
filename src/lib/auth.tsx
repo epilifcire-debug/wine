@@ -7,6 +7,7 @@ export type Perfil = {
   nome: string;
   telefone: string | null;
   foto_url: string | null;
+  username?: string | null;
 };
 
 export type AlunoRow = {
@@ -69,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     const [{ data: p }, { data: roles }, { data: a }] = await Promise.all([
-      supabase.from("profiles").select("id,nome,telefone,foto_url").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("id,nome,telefone,foto_url,username").eq("id", userId).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase
         .from("alunos")

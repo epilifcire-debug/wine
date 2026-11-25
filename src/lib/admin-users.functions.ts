@@ -342,3 +342,44 @@ export const relatorioAlunos = createServerFn({ method: "GET" })
       duplicidades: [...chaves.values()].filter((n) => n > 1).length,
     };
   });
+
+/** Gera uma senha provisória legível (sem caracteres ambíguos). */
+function senhaProvisoria(tamanho = 10) {
+  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint32Array(tamanho));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+}
+
+/**
+ * Admin define uma senha provisória para a conta (útil para quem não tem e-mail).
+ * A senha é devolvida uma única vez para ser repassada à pessoa.
+ * Contas administrativas só podem ser redefinidas pelo Administrador Master.
+ */
+export const redefinirSenhaUsuario = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ userId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }): Promise<{ senha: string }> => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: alvo, error: alvoErr } = await supabaseAdmin.auth.admin.getUserById(data.userId);
+    if (alvoErr || !alvo.user) throw new Error("Conta não encontrada.");
+
+    const ehMaster = String((context.claims as any)?.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL;
+    if ((alvo.user.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL) {
+      throw new Error("A senha do Administrador Master só pode ser trocada por ele, no Perfil.");
+    }
+    const { data: papeis } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.userId);
+    const alvoAdmin = (papeis ?? []).some((r) => ["admin", "admin_master"].includes(String(r.role)));
+    if (alvoAdmin && !ehMaster) {
+      throw new Error("Só o Administrador Master pode redefinir a senha de outro administrador.");
+    }
+
+    const senha = senhaProvisoria();
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, { password: senha });
+    if (error) throw new Error("Não foi possível redefinir a senha.");
+    return { senha };
+  });

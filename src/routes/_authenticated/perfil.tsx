@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { emailVisivel } from "@/lib/auth-usuario.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -52,7 +53,8 @@ function Perfil() {
     nome: perfil?.nome ?? aluno?.nome ?? "",
     telefone: maskTelefone(perfil?.telefone ?? aluno?.telefone ?? ""),
     genero: (aluno as any)?.genero ?? "",
-    email: aluno?.email ?? user?.email ?? "",
+    email: aluno?.email ?? emailVisivel(user?.email) ?? "",
+    username: perfil?.username ?? "",
     endereco: (aluno as any)?.endereco ?? "",
     contato_emergencia: (aluno as any)?.contato_emergencia ?? "",
     observacoes: (aluno as any)?.observacoes ?? "",
@@ -72,7 +74,8 @@ function Perfil() {
       nome: perfil?.nome ?? aluno?.nome ?? "",
       telefone: maskTelefone(perfil?.telefone ?? aluno?.telefone ?? ""),
       genero: (aluno as any)?.genero ?? "",
-      email: aluno?.email ?? user?.email ?? "",
+      email: aluno?.email ?? emailVisivel(user?.email) ?? "",
+      username: perfil?.username ?? "",
       endereco: (aluno as any)?.endereco ?? "",
       contato_emergencia: (aluno as any)?.contato_emergencia ?? "",
       observacoes: (aluno as any)?.observacoes ?? "",
@@ -181,12 +184,22 @@ function Perfil() {
       return;
     }
 
+    const username = form.username.trim().toLowerCase();
+    if (username && !/^[a-z0-9._]{3,20}$/.test(username)) {
+      toast.error("O usuário deve ter de 3 a 20 caracteres: letras, números, ponto ou _.");
+      return;
+    }
+
     setBusy(true);
 
-    const { error: e1 } = await supabase
+    const { error: e1raw } = await supabase
       .from("profiles")
-      .update({ nome: form.nome, telefone: form.telefone })
+      .update({ nome: form.nome, telefone: form.telefone, username: username || null } as any)
       .eq("id", user.id);
+    const e1 =
+      e1raw && (e1raw as any).code === "23505"
+        ? { message: "Este nome de usuário já está em uso." }
+        : e1raw;
 
     let e2: unknown = null;
     if (aluno?.id) {
@@ -311,6 +324,18 @@ function Perfil() {
             value={form.nome}
             onChange={(e) => set("nome", e.target.value)}
             maxLength={120}
+          />
+        </Campo>
+
+        <Campo id="p-usuario" label="Nome de usuário (para entrar)">
+          <Input
+            id="p-usuario"
+            autoCapitalize="none"
+            autoComplete="username"
+            value={form.username}
+            onChange={(e) => set("username", e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ""))}
+            maxLength={20}
+            placeholder="ex.: joao.silva"
           />
         </Campo>
 

@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Eye, Link2, Pencil, Plus, Trash2 } from "lucide-react";
+import { RedefinirSenhaButton } from "@/components/RedefinirSenhaButton";
 import { supabase } from "@/integrations/supabase/client";
 import {
   fetchPlanos,
@@ -484,6 +485,8 @@ function AdminAlunos() {
                       }
                       onSubmit={(values) => salvar.mutateAsync({ id: a.id!, values })}
                     />
+
+                    {a.user_id && <RedefinirSenhaButton userId={a.user_id} nome={a.nome} />}
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
