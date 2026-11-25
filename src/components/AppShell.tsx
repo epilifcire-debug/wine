@@ -171,7 +171,7 @@ function isActivePath(path: string, to: string) {
   return path === to || (to !== "/app" && to !== "/admin" && path.startsWith(`${to}/`));
 }
 
-function NavigationSidebar({ groups, path }: { groups: NavigationGroup[]; path: string }) {
+function NavigationSidebar({ groups, path, isAdmin }: { groups: NavigationGroup[]; path: string; isAdmin: boolean }) {
   const { isMobile, setOpenMobile } = useSidebar();
 
   return (
@@ -219,22 +219,23 @@ function NavigationSidebar({ groups, path }: { groups: NavigationGroup[]; path: 
         ))}
       </SidebarContent>
 
-      <SidebarSeparator />
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Notificações">
-              <Link
-                to={path.startsWith("/admin") ? "/admin/notificacoes" : "/notificacoes"}
-                onClick={() => isMobile && setOpenMobile(false)}
-              >
-                <Bell />
-                <span>Notificações</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      {isAdmin && (
+        <>
+          <SidebarSeparator />
+          <SidebarFooter>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Notificações">
+                  <Link to="/admin/notificacoes" onClick={() => isMobile && setOpenMobile(false)}>
+                    <Bell />
+                    <span>Notificações</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </>
+      )}
       <SidebarRail />
     </Sidebar>
   );
@@ -311,7 +312,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider open={sidebarOpen} onOpenChange={updateSidebar}>
-      <NavigationSidebar groups={groups} path={path} />
+      <NavigationSidebar groups={groups} path={path} isAdmin={isAdmin} />
       <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-md">
           <div className="grid h-14 w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 px-3 sm:px-4">
