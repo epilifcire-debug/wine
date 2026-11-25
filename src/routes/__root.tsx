@@ -54,6 +54,11 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
         <p className="mt-2 text-sm text-muted-foreground">
           Algo deu errado. Tente novamente ou volte para o início.
         </p>
+        {import.meta.env.DEV && (
+          <pre className="mt-4 max-h-40 overflow-auto whitespace-pre-wrap break-words rounded-md border border-border p-2 text-left text-xs text-muted-foreground">
+            {error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ""}` : String(error)}
+          </pre>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {

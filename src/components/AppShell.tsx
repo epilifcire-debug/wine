@@ -1,5 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { qk } from "@/lib/queries";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Bell,
@@ -203,6 +206,29 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const path = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const channel = supabase
+      .channel("admin-planos-pendentes")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notificacoes", filter: "tipo=eq.admin_plano_pendente" },
+        (payload) => {
+          const n = payload.new as { titulo: string; mensagem: string };
+          toast.info(n.titulo, {
+            description: n.mensagem,
+            duration: 12000,
+            action: { label: "Ver", onClick: () => navigate({ to: "/admin/financeiro" }) },
+          });
+          queryClient.invalidateQueries({ queryKey: qk.notificacoes });
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin, navigate, queryClient]);
 
   useEffect(() => {
     if (!loading && isAdmin && !path.startsWith("/admin")) {

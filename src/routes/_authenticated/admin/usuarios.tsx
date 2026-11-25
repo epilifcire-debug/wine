@@ -33,6 +33,12 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios")({
 
 const PERFIS = ["aluno", "professor", "admin"] as const;
 
+const GRUPOS: { titulo: string; vazio: string; perfis: UsuarioAdmin["perfil"][] }[] = [
+  { titulo: "Administradores", vazio: "Nenhum administrador.", perfis: ["admin_master", "admin"] },
+  { titulo: "Professores", vazio: "Nenhum professor.", perfis: ["professor"] },
+  { titulo: "Alunos", vazio: "Nenhum aluno.", perfis: ["aluno"] },
+];
+
 function UsuariosAdmin() {
   const { isAdminMaster, loading } = useAuth();
   const qc = useQueryClient();
@@ -67,8 +73,19 @@ function UsuariosAdmin() {
       {isLoading ? (
         <EmptyState>Carregando usuários…</EmptyState>
       ) : (
-        <div className="space-y-3">
-          {usuarios.map((u) => (
+        <div className="space-y-6">
+          {GRUPOS.map((g) => {
+            const lista = usuarios.filter((u) => g.perfis.includes(u.perfil));
+            return (
+              <section key={g.titulo}>
+                <h2 className="mb-2 font-display text-xl text-foreground">
+                  {g.titulo} <span className="text-sm text-muted-foreground">({lista.length})</span>
+                </h2>
+                {lista.length === 0 ? (
+                  <EmptyState>{g.vazio}</EmptyState>
+                ) : (
+                  <div className="space-y-3">
+                    {lista.map((u) => (
             <div key={u.id} className="surface-panel px-4 py-4">
               <p className="font-display text-lg text-foreground">{u.nome}</p>
               <p className="font-mono text-[11px] tracking-wide text-primary">
@@ -102,7 +119,12 @@ function UsuariosAdmin() {
                 )}
               </div>
             </div>
-          ))}
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
     </>

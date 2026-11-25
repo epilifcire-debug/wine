@@ -170,6 +170,8 @@ export async function fetchAlunos() {
     if (!a.user_id) return true;
     const rs = papeis.get(a.user_id);
     if (!rs || rs.size === 0) return true;
+    // Admin e professor nunca contam como aluno, mesmo que também tenham o papel "aluno".
+    if (rs.has("admin") || rs.has("admin_master") || rs.has("professor")) return false;
     if (rs.has("aluno")) return true;
     return !rs.has("admin") && !rs.has("professor") && !rs.has("admin_master");
   });

@@ -246,7 +246,7 @@ export const listarContasSemFicha = createServerFn({ method: "GET" })
     const comFicha = new Set((alunos ?? []).map((a) => a.user_id).filter(Boolean) as string[]);
     const admins = new Set(
       (roles ?? [])
-        .filter((r) => String(r.role) === "admin" || String(r.role) === "admin_master")
+        .filter((r) => ["admin", "admin_master", "professor"].includes(String(r.role)))
         .map((r) => r.user_id),
     );
 
@@ -302,12 +302,19 @@ export const relatorioAlunos = createServerFn({ method: "GET" })
       supabaseAdmin.from("user_roles").select("user_id, role"),
     ]);
 
-    const lista = alunos ?? [];
-    const comFicha = new Set(lista.map((a) => a.user_id).filter(Boolean) as string[]);
+    const todas = alunos ?? [];
+    const comFicha = new Set(todas.map((a) => a.user_id).filter(Boolean) as string[]);
     const admins = new Set(
       (roles ?? [])
-        .filter((r) => String(r.role) === "admin" || String(r.role) === "admin_master")
+        .filter((r) => ["admin", "admin_master", "professor"].includes(String(r.role)))
         .map((r) => r.user_id),
+    );
+    const emailMaster = (users?.users ?? []).find(
+      (u) => (u.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL,
+    )?.id;
+    // Fichas de admin e professor não contam como aluno.
+    const lista = todas.filter(
+      (a) => !a.user_id || (!admins.has(a.user_id) && a.user_id !== emailMaster),
     );
 
     const chaves = new Map<string, number>();
