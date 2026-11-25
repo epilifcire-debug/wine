@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/wine-barbell-logo.png.asset.json";
 import { Button } from "@/components/ui/button";
@@ -99,18 +98,21 @@ function AuthPage() {
     }
   }
 
+  // Google direto pelo Supabase (fora do Lovable). Só aparece quando o
+  // provedor estiver configurado: VITE_GOOGLE_LOGIN=1 no .env.
+  const googleAtivo = import.meta.env.VITE_GOOGLE_LOGIN === "1";
+
   async function handleGoogle() {
     setBusy(true);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/app` },
     });
-    if (result.error) {
+    if (error) {
       toast.error("Não foi possível entrar com o Google.");
       setBusy(false);
-      return;
     }
-    if (result.redirected) return;
-    navigate({ to: "/app", replace: true });
+    // Sem erro, o navegador vai para o Google e volta logado.
   }
 
   return (
@@ -220,7 +222,7 @@ function AuthPage() {
               </Button>
             </form>
 
-            {mode !== "reset" && (
+            {mode !== "reset" && googleAtivo && (
               <>
                 <div className="my-5 flex items-center gap-3">
                   <span className="h-px flex-1 bg-border" />
