@@ -1,6 +1,8 @@
 import { Check } from "lucide-react";
-import { precoBRL, type Plano } from "@/lib/queries";
+import { useQuery } from "@tanstack/react-query";
+import { fetchModalidades, precoBRL, qk, type Plano } from "@/lib/queries";
 import {
+  diasPlano,
   duracaoPlano,
   itensPlano,
   limiteSemanalPlano,
@@ -16,6 +18,12 @@ type PlanoDetailsProps = {
 
 export function PlanoDetails({ plano, atual = false, mostrarStatus = false }: PlanoDetailsProps) {
   const beneficios = itensPlano(plano.beneficios);
+  const { data: modalidades = [] } = useQuery({ queryKey: qk.modalidades, queryFn: fetchModalidades });
+  const turmasIds = plano.modalidades_permitidas ?? [];
+  const turmas =
+    turmasIds.length === 0
+      ? "Todas"
+      : modalidades.filter((m) => turmasIds.includes(m.id)).map((m) => m.nome).join(", ") || "—";
 
   return (
     <div className="min-w-0">
@@ -60,6 +68,20 @@ export function PlanoDetails({ plano, atual = false, mostrarStatus = false }: Pl
           <dt className="text-xs text-muted-foreground">Limite semanal</dt>
           <dd className="font-medium text-foreground">{limiteSemanalPlano(plano)}</dd>
         </div>
+        <div>
+          <dt className="text-xs text-muted-foreground">Dias liberados</dt>
+          <dd className="font-medium text-foreground">{diasPlano(plano)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-muted-foreground">Turmas</dt>
+          <dd className="font-medium text-foreground">{turmas}</dd>
+        </div>
+        {plano.preco_recorrencia_centavos ? (
+          <div className="sm:col-span-2">
+            <dt className="text-xs text-muted-foreground">Renovação com recorrência</dt>
+            <dd className="font-medium text-primary">{precoBRL(plano.preco_recorrencia_centavos)}</dd>
+          </div>
+        ) : null}
       </dl>
 
       {plano.regras_acesso && (

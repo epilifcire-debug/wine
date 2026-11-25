@@ -1,10 +1,14 @@
-import { aulasNaSemana, type Plano } from "./queries";
+import { aulasNaSemana, aulasNoMes, type Plano } from "./queries";
+import { diaIsoSemana, diasPlano } from "./plano-format";
 
 export type BookingReason =
   | "NOT_AUTHENTICATED"
   | "NO_PLAN"
   | "PLAN_EXPIRED"
   | "WEEKLY_LIMIT_REACHED"
+  | "MONTHLY_LIMIT_REACHED"
+  | "DAY_NOT_ALLOWED"
+  | "CLASS_NOT_ALLOWED"
   | "DUPLICATE_BOOKING"
   | "CLASS_FULL"
   | "CLASS_CANCELLED";
@@ -40,6 +44,21 @@ export function msgLimiteSemanal(limite?: number | null) {
   return `Seu plano permite até ${limite} aula${limite === 1 ? "" : "s"} por semana. Para realizar mais aulas, faça upgrade do seu plano ou use um Day Use.`;
 }
 
+export function msgLimiteMensal(limite?: number | null) {
+  if (!limite) {
+    return "Seu plano não permite mais aulas neste mês. Para realizar mais aulas, faça upgrade do seu plano ou use um Day Use.";
+  }
+  return `Seu plano permite até ${limite} aula${limite === 1 ? "" : "s"} por mês. Para realizar mais aulas, faça upgrade do seu plano ou use um Day Use.`;
+}
+
+export function msgDiaNaoPermitido(plano?: Plano | null) {
+  const dias = plano ? diasPlano(plano) : "";
+  return `Seu plano não libera aulas neste dia${dias ? ` (dias liberados: ${dias})` : ""}. Escolha outra data, faça upgrade do seu plano ou use um Day Use.`;
+}
+
+export const MSG_TURMA_NAO_PERMITIDA =
+  "Seu plano não libera esta turma. Escolha uma turma incluída no seu plano, faça upgrade ou use um Day Use.";
+
 /** Regra central: o aluno pode reservar uma aula? */
 export function canBookClass(input: {
   aluno?: { id?: string | null; plano_id?: string | null } | null;
@@ -53,6 +72,7 @@ export function canBookClass(input: {
   /** Aula alvo, para checar conflito, vagas e cancelamento. */
   horario?: {
     id?: string;
+    modalidade_id?: string;
     data?: string;
     horario?: string;
     cancelada?: boolean | null;
@@ -105,18 +125,38 @@ export function canBookClass(input: {
     return { allowed: false, reason: "NO_PLAN" };
   }
 
-  // Sem limite semanal só significa "ilimitado" quando o plano marca isso.
-  const limite = plano?.limite_semanal;
-  if (limite == null) return { allowed: true, limite: null };
+  // Fora da regra do plano, um Day Use disponível ainda libera a aula.
+  const bloqueio = (reason: BookingReason, extra: Partial<BookingCheck> = {}): BookingCheck =>
+    dayUsesDisponiveis > 0
+      ? { allowed: true, usaDayUse: true, ...extra }
+      : { allowed: false, reason, ...extra };
 
-  const usadas = aulasNaSemana(confirmadas, base);
-  if (usadas >= limite) {
-    if (dayUsesDisponiveis > 0) {
-      return { allowed: true, limite, usadas, usaDayUse: true };
-    }
-    return { allowed: false, reason: "WEEKLY_LIMIT_REACHED", limite, usadas };
+  const dataAula = horario?.data;
+  const dias = plano?.dias_permitidos ?? [];
+  if (dataAula && dias.length > 0 && !dias.map(Number).includes(diaIsoSemana(dataAula))) {
+    return bloqueio("DAY_NOT_ALLOWED");
   }
-  return { allowed: true, limite, usadas };
+  const turmas = plano?.modalidades_permitidas ?? [];
+  if (horario?.modalidade_id && turmas.length > 0 && !turmas.includes(horario.modalidade_id)) {
+    return bloqueio("CLASS_NOT_ALLOWED");
+  }
+
+  if (plano?.ilimitado) return { allowed: true, limite: null };
+
+  const baseAula = dataAula ? new Date(`${dataAula.slice(0, 10)}T12:00:00`) : base;
+  const limite = plano?.limite_semanal ?? null;
+  if (limite != null) {
+    const usadas = aulasNaSemana(confirmadas, baseAula);
+    if (usadas >= limite) return bloqueio("WEEKLY_LIMIT_REACHED", { limite, usadas });
+  }
+  const limiteMes = plano?.limite_mensal ?? null;
+  if (limiteMes != null) {
+    const usadasMes = aulasNoMes(confirmadas, baseAula);
+    if (usadasMes >= limiteMes) {
+      return bloqueio("MONTHLY_LIMIT_REACHED", { limite: limiteMes, usadas: usadasMes });
+    }
+  }
+  return { allowed: true, limite };
 }
 
 
@@ -126,5 +166,8 @@ export function reasonFromError(message?: string | null): BookingReason | null {
   if (/PLAN_EXPIRED|vencido/i.test(msg)) return "PLAN_EXPIRED";
   if (/NO_ACTIVE_PLAN/i.test(msg)) return "NO_PLAN";
   if (/WEEKLY_PLAN_LIMIT_REACHED|limite semanal/i.test(msg)) return "WEEKLY_LIMIT_REACHED";
+  if (/MONTHLY_PLAN_LIMIT_REACHED/i.test(msg)) return "MONTHLY_LIMIT_REACHED";
+  if (/PLAN_DAY_NOT_ALLOWED/i.test(msg)) return "DAY_NOT_ALLOWED";
+  if (/PLAN_CLASS_NOT_ALLOWED/i.test(msg)) return "CLASS_NOT_ALLOWED";
   return null;
 }

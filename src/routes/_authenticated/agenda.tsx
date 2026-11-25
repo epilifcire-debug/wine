@@ -23,6 +23,9 @@ import {
   MSG_DUPLICATE_BOOKING,
   MSG_NO_PLAN,
   MSG_PLAN_EXPIRED,
+  MSG_TURMA_NAO_PERMITIDA,
+  msgDiaNaoPermitido,
+  msgLimiteMensal,
   canBookClass,
   msgLimiteSemanal,
   reasonFromError,
@@ -189,6 +192,15 @@ function Agenda() {
       case "WEEKLY_LIMIT_REACHED":
         setLimiteMsg(msgLimiteSemanal(check.limite));
         return;
+      case "MONTHLY_LIMIT_REACHED":
+        setLimiteMsg(msgLimiteMensal(check.limite));
+        return;
+      case "DAY_NOT_ALLOWED":
+        setLimiteMsg(msgDiaNaoPermitido(plano));
+        return;
+      case "CLASS_NOT_ALLOWED":
+        setLimiteMsg(MSG_TURMA_NAO_PERMITIDA);
+        return;
       case "DUPLICATE_BOOKING":
         toast.error(MSG_DUPLICATE_BOOKING);
         return;
@@ -246,6 +258,18 @@ function Agenda() {
       }
       if (reason === "WEEKLY_LIMIT_REACHED") {
         setLimiteMsg(msgLimiteSemanal(plano?.limite_semanal));
+        return;
+      }
+      if (reason === "MONTHLY_LIMIT_REACHED") {
+        setLimiteMsg(msgLimiteMensal(plano?.limite_mensal));
+        return;
+      }
+      if (reason === "DAY_NOT_ALLOWED") {
+        setLimiteMsg(msgDiaNaoPermitido(plano));
+        return;
+      }
+      if (reason === "CLASS_NOT_ALLOWED") {
+        setLimiteMsg(MSG_TURMA_NAO_PERMITIDA);
         return;
       }
       if (/lotada|CLASS_NOT_AVAILABLE/i.test(msg)) {
@@ -496,7 +520,7 @@ function Agenda() {
       <AlertDialog open={Boolean(limiteMsg)} onOpenChange={(o) => !o && setLimiteMsg(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Limite semanal do plano atingido</AlertDialogTitle>
+            <AlertDialogTitle>{/dia|turma/i.test(limiteMsg ?? "") ? "Fora das regras do seu plano" : /mês/i.test(limiteMsg ?? "") ? "Limite mensal do plano atingido" : "Limite semanal do plano atingido"}</AlertDialogTitle>
             <AlertDialogDescription>{limiteMsg}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -20,7 +20,9 @@ import {
 export type FieldSpec = {
   name: string;
   label: string;
-  type?: "text" | "textarea" | "date" | "time" | "number" | "email" | "select" | "image";
+  type?: "text" | "textarea" | "date" | "time" | "number" | "email" | "select" | "image" | "checkboxes";
+  /** Texto de ajuda abaixo do campo. */
+  hint?: string;
   options?: { value: string; label: string }[];
   required?: boolean;
   placeholder?: string;
@@ -113,6 +115,38 @@ export function RecordDialog({
                     </option>
                   ))}
                 </select>
+              ) : f.type === "checkboxes" ? (
+                <div className="flex flex-wrap gap-2" role="group" aria-label={f.label}>
+                  {(f.options ?? []).length === 0 ? (
+                    <p className="text-xs text-muted-foreground">Nenhuma opção cadastrada.</p>
+                  ) : (
+                    f.options?.map((o) => {
+                      const atual: string[] = Array.isArray(values[f.name]) ? values[f.name] : [];
+                      const marcado = atual.includes(o.value);
+                      return (
+                        <label
+                          key={o.value}
+                          className={`flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm ${marcado ? "border-primary text-foreground" : "border-input text-muted-foreground"}`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="accent-[var(--primary)]"
+                            checked={marcado}
+                            onChange={(e) =>
+                              set(
+                                f.name,
+                                e.target.checked
+                                  ? [...atual, o.value]
+                                  : atual.filter((v) => v !== o.value),
+                              )
+                            }
+                          />
+                          {o.label}
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
               ) : f.type === "image" ? (
                 <ImageField value={values[f.name]} onChange={(v) => set(f.name, v)} />
               ) : (
@@ -137,6 +171,7 @@ export function RecordDialog({
                   aria-invalid={f.mask === "telefone" && Boolean(erroTelefone(values[f.name]))}
                 />
               )}
+              {f.hint ? <p className="text-[11px] leading-snug text-muted-foreground">{f.hint}</p> : null}
               {f.mask === "telefone" && erroTelefone(values[f.name]) ? (
                 <p className="text-[11px] leading-snug text-destructive">
                   {erroTelefone(values[f.name])}

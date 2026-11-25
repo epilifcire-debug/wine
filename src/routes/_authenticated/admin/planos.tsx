@@ -3,7 +3,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchPlanos, qk } from "@/lib/queries";
+import { fetchModalidades, fetchPlanos, qk } from "@/lib/queries";
+import { DIAS_SEMANA } from "@/lib/plano-format";
 import { AdminGuard } from "@/components/AdminGuard";
 import { EmptyState, PageTitle } from "@/components/AppShell";
 import { RecordDialog, type FieldSpec } from "@/components/RecordDialog";
@@ -42,10 +43,16 @@ export const Route = createFileRoute("/_authenticated/admin/planos")({
   }),
 });
 
-const campos: FieldSpec[] = [
+const camposBase: FieldSpec[] = [
   { name: "nome", label: "Nome do plano", required: true, maxLength: 80 },
   { name: "descricao", label: "Descrição", type: "textarea" },
   { name: "preco", label: "Valor (R$)", type: "number" },
+  {
+    name: "preco_recorrencia",
+    label: "Valor da recorrência (R$)",
+    type: "number",
+    hint: "Só para trimestrais com desconto na renovação. Deixe 0 nos demais.",
+  },
   {
     name: "forma_pagamento",
     label: "Forma de pagamento",
@@ -74,12 +81,19 @@ const campos: FieldSpec[] = [
   },
   {
     name: "ilimitado",
-    label: "Aulas ilimitadas (sem limite semanal)",
+    label: "Aulas ilimitadas (ignora limite semanal e mensal)",
     type: "select",
     options: [
       { value: "nao", label: "Não" },
       { value: "sim", label: "Sim" },
     ],
+  },
+  {
+    name: "dias_permitidos",
+    label: "Dias liberados",
+    type: "checkboxes",
+    options: DIAS_SEMANA,
+    hint: "Nenhum marcado = todos os dias.",
   },
   {
     name: "acesso_livre",
@@ -117,6 +131,19 @@ const campos: FieldSpec[] = [
 function AdminPlanos() {
   const qc = useQueryClient();
   const { data = [], isLoading } = useQuery({ queryKey: qk.planos, queryFn: fetchPlanos });
+  const { data: modalidades = [] } = useQuery({ queryKey: qk.modalidades, queryFn: fetchModalidades });
+
+  const campos: FieldSpec[] = [
+    ...camposBase.slice(0, camposBase.findIndex((f) => f.name === "acesso_livre")),
+    {
+      name: "modalidades_permitidas",
+      label: "Turmas liberadas",
+      type: "checkboxes",
+      options: modalidades.map((m) => ({ value: m.id, label: m.nome })),
+      hint: "Nenhuma marcada = todas as turmas. Ex.: Domingueira só a turma Domingueira.",
+    },
+    ...camposBase.slice(camposBase.findIndex((f) => f.name === "acesso_livre")),
+  ];
 
   const salvar = useMutation({
     mutationFn: async ({ id, values }: { id?: string; values: Record<string, any> }) => {
@@ -135,6 +162,16 @@ function AdminPlanos() {
         tipo: values.tipo === "avulso" ? "avulso" : "recorrente",
         ordem: Number(values.ordem || 0),
         ativo: values.ativo !== "nao",
+        preco_recorrencia_centavos:
+          Number(values.preco_recorrencia) > 0 ? Math.round(Number(values.preco_recorrencia) * 100) : null,
+        dias_permitidos:
+          Array.isArray(values.dias_permitidos) && values.dias_permitidos.length > 0
+            ? values.dias_permitidos.map(Number).sort()
+            : null,
+        modalidades_permitidas:
+          Array.isArray(values.modalidades_permitidas) && values.modalidades_permitidas.length > 0
+            ? values.modalidades_permitidas
+            : null,
       };
       const { error } = id
         ? await supabase.from("planos").update(payload as any).eq("id", id)
@@ -199,6 +236,9 @@ function AdminPlanos() {
                   initial={{
                     ...p,
                     preco: (p.preco_centavos ?? 0) / 100,
+                    preco_recorrencia: (p.preco_recorrencia_centavos ?? 0) / 100,
+                    dias_permitidos: (p.dias_permitidos ?? []).map(String),
+                    modalidades_permitidas: p.modalidades_permitidas ?? [],
                     acesso_livre: p.acesso_livre ? "sim" : "nao",
                     ilimitado: p.ilimitado ? "sim" : "nao",
                     ativo: p.ativo ? "sim" : "nao",

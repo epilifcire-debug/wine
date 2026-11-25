@@ -57,6 +57,12 @@ export type Plano = {
   tipo: string;
   ordem: number;
   ativo: boolean;
+  /** Dias liberados, 1 = segunda ... 7 = domingo. Vazio/nulo = todos. */
+  dias_permitidos?: number[] | null;
+  /** Turmas (modalidades) liberadas. Vazio/nulo = todas. */
+  modalidades_permitidas?: string[] | null;
+  /** Valor da renovação com desconto (só trimestrais). */
+  preco_recorrencia_centavos?: number | null;
 };
 
 export const qk = {
@@ -285,6 +291,19 @@ export function inicioSemanaISO(base = new Date()) {
 }
 
 /** Quantas aulas confirmadas o aluno tem na semana corrente. */
+/** Aulas do plano no mês da data base (Day Use não conta). */
+export function aulasNoMes(reservas: any[], base = new Date()) {
+  const mes = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}`;
+  return (reservas ?? []).filter(
+    (r) =>
+      r.status === "confirmada" &&
+      !(Array.isArray(r.day_uses) && r.day_uses.length > 0) &&
+      r.horarios &&
+      !r.horarios.cancelada &&
+      String(r.horarios.data).slice(0, 7) === mes,
+  ).length;
+}
+
 export function aulasNaSemana(reservas: any[], base = new Date()) {
   const ini = inicioSemanaISO(base);
   const fimDate = new Date(`${ini}T00:00:00`);

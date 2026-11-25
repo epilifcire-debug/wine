@@ -673,15 +673,18 @@ export type Database = {
           beneficios: string | null
           created_at: string
           descricao: string | null
+          dias_permitidos: number[] | null
           duracao_meses: number
           forma_pagamento: string
           id: string
           ilimitado: boolean
           limite_mensal: number | null
           limite_semanal: number | null
+          modalidades_permitidas: string[] | null
           nome: string
           ordem: number
           preco_centavos: number
+          preco_recorrencia_centavos: number | null
           regras_acesso: string | null
           tipo: string
           updated_at: string
@@ -692,15 +695,18 @@ export type Database = {
           beneficios?: string | null
           created_at?: string
           descricao?: string | null
+          dias_permitidos?: number[] | null
           duracao_meses?: number
           forma_pagamento?: string
           id?: string
           ilimitado?: boolean
           limite_mensal?: number | null
           limite_semanal?: number | null
+          modalidades_permitidas?: string[] | null
           nome: string
           ordem?: number
           preco_centavos?: number
+          preco_recorrencia_centavos?: number | null
           regras_acesso?: string | null
           tipo?: string
           updated_at?: string
@@ -711,15 +717,18 @@ export type Database = {
           beneficios?: string | null
           created_at?: string
           descricao?: string | null
+          dias_permitidos?: number[] | null
           duracao_meses?: number
           forma_pagamento?: string
           id?: string
           ilimitado?: boolean
           limite_mensal?: number | null
           limite_semanal?: number | null
+          modalidades_permitidas?: string[] | null
           nome?: string
           ordem?: number
           preco_centavos?: number
+          preco_recorrencia_centavos?: number | null
           regras_acesso?: string | null
           tipo?: string
           updated_at?: string
