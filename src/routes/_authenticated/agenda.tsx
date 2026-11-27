@@ -25,6 +25,9 @@ import {
   MSG_PLAN_EXPIRED,
   MSG_TURMA_NAO_PERMITIDA,
   MSG_ACESSO_LIVRE,
+  MSG_CANCEL_NOT_ALLOWED,
+  MSG_CLASS_ALREADY_STARTED,
+  msgPlanoVenceAntes,
   msgDiaNaoPermitido,
   msgLimiteMensal,
   canBookClass,
@@ -32,7 +35,7 @@ import {
   reasonFromError,
 } from "@/lib/booking";
 
-import { formatDateLong, formatHora } from "@/lib/format";
+import { formatDateLong, formatHora, todayISO } from "@/lib/format";
 import { googleCalendarUrl } from "@/lib/calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -100,11 +103,13 @@ function Agenda() {
     enabled: Boolean(aluno?.id),
     refetchInterval: 15000,
   });
-  const contratoVigente = contratos.some((c) =>
+  const contratoAtual = contratos.find((c) =>
     c.plano_id === aluno?.plano_id &&
     (statusContrato(c) === "ativo" || statusContrato(c) === "proximo_vencimento") &&
-    Boolean(c.proximo_vencimento && c.proximo_vencimento >= new Date().toISOString().slice(0, 10)),
+    Boolean(c.proximo_vencimento && c.proximo_vencimento >= todayISO()),
   );
+  const contratoVigente = Boolean(contratoAtual);
+  const vencimento = contratoAtual?.proximo_vencimento ?? null;
 
   const { data: dayUsesDisponiveis = 0, isPending: dayUsesPendentes } = useQuery({
     queryKey: ["day-uses", "disponiveis", aluno?.id],
@@ -178,6 +183,7 @@ function Agenda() {
       aluno,
       plano,
       contratoVigente,
+      vencimento,
       reservas: reservas as any[],
       dayUsesDisponiveis,
       horario: h,
@@ -214,6 +220,12 @@ function Agenda() {
         return;
       case "CLASS_CANCELLED":
         toast.error(MSG_CLASS_CANCELLED);
+        return;
+      case "PLAN_EXPIRED":
+        setSemPlanoMsg(msgPlanoVenceAntes(vencimento));
+        return;
+      case "CLASS_ALREADY_STARTED":
+        toast.error(MSG_CLASS_ALREADY_STARTED);
         return;
       default:
         toast.error("Não foi possível reservar esta aula.");
@@ -258,7 +270,15 @@ function Agenda() {
         return;
       }
       if (reason === "PLAN_EXPIRED") {
-        setSemPlanoMsg(MSG_PLAN_EXPIRED);
+        setSemPlanoMsg(/PLAN_EXPIRED/.test(msg) ? msgPlanoVenceAntes(vencimento) : MSG_PLAN_EXPIRED);
+        return;
+      }
+      if (reason === "CLASS_ALREADY_STARTED") {
+        toast.error(MSG_CLASS_ALREADY_STARTED);
+        return;
+      }
+      if (reason === "DUPLICATE_BOOKING") {
+        toast.error(MSG_DUPLICATE_BOOKING);
         return;
       }
       if (reason === "WEEKLY_LIMIT_REACHED") {
@@ -289,7 +309,9 @@ function Agenda() {
         toast.error("Sua ficha de aluno está inativa. Fale com a administração.");
         return;
       }
-      toast.error(msg);
+      // Nunca mostrar mensagem técnica do banco ao aluno.
+      console.error("Erro ao reservar:", msg);
+      toast.error("Não foi possível reservar esta aula. Tente novamente ou fale com a administração.");
     },
   });
 
@@ -308,8 +330,14 @@ function Agenda() {
       qc.invalidateQueries({ queryKey: ["day-uses"] });
       qc.invalidateQueries({ queryKey: ["lista-espera"] });
     },
-    onError: (e: Error) => toast.error(e.message),
-
+    onError: (e: Error) => {
+      if (reasonFromError(e.message) === "CANCEL_NOT_ALLOWED") {
+        toast.error(MSG_CANCEL_NOT_ALLOWED);
+        return;
+      }
+      console.error("Erro ao cancelar:", e.message);
+      toast.error("Não foi possível cancelar. Tente novamente ou fale com a administração.");
+    },
   });
 
   const porData = horarios.reduce<Record<string, typeof horarios>>((acc, h) => {
@@ -401,15 +429,21 @@ function Agenda() {
                           >
                             <CalendarPlus className="size-4 text-primary" />
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() =>
-                              setConfirmarCancelar({ reservaId: minha.id, horario: h })
-                            }
-                          >
-                            Cancelar
-                          </Button>
+                          {new Date(`${h.data}T${String(h.horario).slice(0, 5)}:00-03:00`) > new Date() &&
+                          minha?.presenca !== "presente" &&
+                          !minha?.checkin_em ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                setConfirmarCancelar({ reservaId: minha.id, horario: h })
+                              }
+                            >
+                              Cancelar
+                            </Button>
+                          ) : (
+                            <span className="text-[11px] font-semibold text-muted-foreground">Reservada</span>
+                          )}
                         </div>
                       ) : naFila && oportunidade ? (
                         <div className="shrink-0 text-right">

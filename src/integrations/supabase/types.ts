@@ -445,6 +445,7 @@ export type Database = {
         Row: {
           data_envio: string
           enviado_por: string | null
+          evento_id: string | null
           id: string
           mensagem: string
           tipo: string
@@ -453,6 +454,7 @@ export type Database = {
         Insert: {
           data_envio?: string
           enviado_por?: string | null
+          evento_id?: string | null
           id?: string
           mensagem: string
           tipo?: string
@@ -461,6 +463,7 @@ export type Database = {
         Update: {
           data_envio?: string
           enviado_por?: string | null
+          evento_id?: string | null
           id?: string
           mensagem?: string
           tipo?: string

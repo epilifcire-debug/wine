@@ -15,7 +15,7 @@ import {
   statusLabel,
   type ContratoStatus,
 } from "@/lib/queries";
-import { formatDateBR } from "@/lib/format";
+import { formatDateBR, todayISO } from "@/lib/format";
 import { itensPlano } from "@/lib/plano-format";
 import { EmptyState, PageTitle } from "@/components/AppShell";
 
@@ -79,7 +79,7 @@ function MeuPlanoFinanceiro() {
   const status = statusContrato(contrato);
   const planoAtivo = Boolean(plano?.ativo && contrato &&
     (status === "ativo" || status === "proximo_vencimento") &&
-    contrato.proximo_vencimento && contrato.proximo_vencimento >= new Date().toISOString().slice(0, 10));
+    contrato.proximo_vencimento && contrato.proximo_vencimento >= todayISO());
 
   return (
     <div className="space-y-6">

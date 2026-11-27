@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { EmptyState, PageTitle } from "@/components/AppShell";
 import { PlanoDetails } from "@/components/PlanoDetails";
-import { formatDateBR } from "@/lib/format";
+import { formatDateBR, todayISO } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/planos")({
   component: PlanosAluno,
@@ -64,7 +64,7 @@ function PlanosAluno() {
   const pendente = contratos.find((c) => c.status === "aguardando_pagamento");
   const vigente = contratos.find((c) => c.plano_id === meuPlanoId &&
     (statusContrato(c) === "ativo" || statusContrato(c) === "proximo_vencimento") &&
-    Boolean(c.proximo_vencimento && c.proximo_vencimento >= new Date().toISOString().slice(0, 10)));
+    Boolean(c.proximo_vencimento && c.proximo_vencimento >= todayISO()));
 
   const aderir = useMutation({
     mutationFn: async ({ plano, recorrencia }: { plano: Plano; recorrencia: boolean }) => {

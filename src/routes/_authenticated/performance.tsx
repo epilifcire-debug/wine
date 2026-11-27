@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { dataISOBrasilia, todayISO } from "@/lib/format";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -72,7 +73,7 @@ const formVazio = (): FormState => ({
   tempo: "",
   distancia: "",
   resultado: "",
-  data: new Date().toISOString().slice(0, 10),
+  data: todayISO(),
   observacao: "",
 });
 
@@ -162,7 +163,7 @@ function PerformancePage() {
   const registrosExercicio = useMemo(() => {
     const cfg = periodos.find((p) => p.id === periodo)!;
     const corte = cfg.dias
-      ? new Date(Date.now() - cfg.dias * 86_400_000).toISOString().slice(0, 10)
+      ? dataISOBrasilia(new Date(Date.now() - cfg.dias * 86_400_000))
       : null;
     return registros
       .filter((r) => r.exercicio === selecionado && (!corte || r.data >= corte))

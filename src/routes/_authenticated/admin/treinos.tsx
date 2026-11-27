@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchModalidades, fetchTreinos, qk } from "@/lib/queries";
-import { formatDateBR } from "@/lib/format";
+import { formatDateBR, todayISO } from "@/lib/format";
 import { AdminGuard } from "@/components/AdminGuard";
 import { EmptyState, PageTitle } from "@/components/AppShell";
 import { RecordDialog, type FieldSpec } from "@/components/RecordDialog";
@@ -100,7 +100,7 @@ function AdminTreinos() {
           <RecordDialog
             title="Novo WOD"
             fields={campos}
-            initial={{ data: new Date().toISOString().slice(0, 10) }}
+            initial={{ data: todayISO() }}
             trigger={
               <Button size="sm">
                 <Plus className="size-4" /> Novo

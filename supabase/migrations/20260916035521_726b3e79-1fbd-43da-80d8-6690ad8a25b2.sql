@@ -30,7 +30,9 @@ BEGIN
   LIMIT 1;
 
   IF v_user_id IS NULL THEN
-    RAISE EXCEPTION 'Conta Administrador Master não encontrada';
+    -- Banco novo: a conta ainda não existe. Rode docs/admin/admin-master.sql depois do cadastro.
+    RAISE NOTICE 'Conta Administrador Master ainda não existe; pulando.';
+    RETURN;
   END IF;
 
   DELETE FROM public.user_roles

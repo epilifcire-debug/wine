@@ -1,5 +1,6 @@
 import { aulasNaSemana, aulasNoMes, type Plano } from "./queries";
 import { diaIsoSemana, diasPlano, ehDiaAcessoLivre } from "./plano-format";
+import { formatDateBR } from "./format";
 
 export type BookingReason =
   | "NOT_AUTHENTICATED"
@@ -12,7 +13,9 @@ export type BookingReason =
   | "CLASS_NOT_ALLOWED"
   | "DUPLICATE_BOOKING"
   | "CLASS_FULL"
-  | "CLASS_CANCELLED";
+  | "CLASS_CANCELLED"
+  | "CLASS_ALREADY_STARTED"
+  | "CANCEL_NOT_ALLOWED";
 
 export type BookingCheck = {
   allowed: boolean;
@@ -21,6 +24,17 @@ export type BookingCheck = {
   usadas?: number;
   usaDayUse?: boolean;
 };
+
+export const MSG_CLASS_ALREADY_STARTED = "Esta aula já começou ou já passou. Escolha outro horário.";
+
+export const MSG_CANCEL_NOT_ALLOWED =
+  "Esta aula não pode mais ser cancelada: ela já começou ou já tem presença registrada.";
+
+export function msgPlanoVenceAntes(vencimento?: string | null) {
+  return vencimento
+    ? `Seu plano vence em ${formatDateBR(vencimento)}, antes da data desta aula. Renove seu plano para reservar.`
+    : "Seu plano vence antes da data desta aula. Renove seu plano para reservar.";
+}
 
 export const MSG_NO_PLAN =
   "Você ainda não possui um plano ativo. Escolha um plano para poder reservar suas aulas.";
@@ -69,6 +83,8 @@ export function canBookClass(input: {
   plano?: Plano | null;
   /** Contrato pago e vigente; o cadastro do plano por si só não libera reservas. */
   contratoVigente?: boolean;
+  /** Vencimento do contrato (AAAA-MM-DD): a aula precisa ser até essa data. */
+  vencimento?: string | null;
   reservas?: any[];
   base?: Date;
   /** Day Uses com status "disponivel". */
@@ -89,6 +105,7 @@ export function canBookClass(input: {
     aluno,
     plano,
     contratoVigente = false,
+    vencimento = null,
     reservas = [],
     base = new Date(),
     dayUsesDisponiveis = 0,
@@ -102,6 +119,14 @@ export function canBookClass(input: {
 
   if (horario) {
     if (horario.cancelada) return { allowed: false, reason: "CLASS_CANCELLED" };
+
+    // Aula que já começou (horário de Brasília).
+    if (horario.data && horario.horario) {
+      const inicio = new Date(`${horario.data.slice(0, 10)}T${horario.horario.slice(0, 5)}:00-03:00`);
+      if (!Number.isNaN(inicio.getTime()) && inicio.getTime() <= base.getTime()) {
+        return { allowed: false, reason: "CLASS_ALREADY_STARTED" };
+      }
+    }
 
     const jaReservada = confirmadas.some(
       (r) =>
@@ -136,6 +161,8 @@ export function canBookClass(input: {
       : { allowed: false, reason, ...extra };
 
   const dataAula = horario?.data;
+  // A validade vale para a data da aula, não para hoje.
+  if (dataAula && vencimento && dataAula.slice(0, 10) > vencimento) return bloqueio("PLAN_EXPIRED");
   if (dataAula && ehDiaAcessoLivre(plano, dataAula)) return bloqueio("FREE_ACCESS_DAY");
   const dias = plano?.dias_permitidos ?? [];
   if (dataAula && dias.length > 0 && !dias.map(Number).includes(diaIsoSemana(dataAula))) {
@@ -168,7 +195,10 @@ export function canBookClass(input: {
 /** Converte erros do banco (triggers) em motivos conhecidos. */
 export function reasonFromError(message?: string | null): BookingReason | null {
   const msg = message ?? "";
-  if (/PLAN_EXPIRED|vencido/i.test(msg)) return "PLAN_EXPIRED";
+  if (/PLAN_EXPIRED|PLAN_NOT_STARTED|vencido/i.test(msg)) return "PLAN_EXPIRED";
+  if (/CLASS_ALREADY_STARTED/i.test(msg)) return "CLASS_ALREADY_STARTED";
+  if (/CANCEL_NOT_ALLOWED/i.test(msg)) return "CANCEL_NOT_ALLOWED";
+  if (/DUPLICATE_TIME_SLOT/i.test(msg)) return "DUPLICATE_BOOKING";
   if (/NO_ACTIVE_PLAN/i.test(msg)) return "NO_PLAN";
   if (/WEEKLY_PLAN_LIMIT_REACHED|limite semanal/i.test(msg)) return "WEEKLY_LIMIT_REACHED";
   if (/MONTHLY_PLAN_LIMIT_REACHED/i.test(msg)) return "MONTHLY_LIMIT_REACHED";

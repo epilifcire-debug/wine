@@ -128,10 +128,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const userId = session?.user?.id;
   useEffect(() => {
-    if (!session?.user) return;
-    loadExtras(session.user.id);
-  }, [session?.user?.id]);
+    if (!userId) return;
+    loadExtras(userId);
+  }, [userId]);
 
   const isAdminMaster =
     (session?.user?.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL;

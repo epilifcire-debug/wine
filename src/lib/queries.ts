@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { todayISO } from "./format";
+import { isoLocal, todayISO } from "./format";
 
 export type Modalidade = {
   id: string;
@@ -289,7 +289,7 @@ export function inicioSemanaISO(base = new Date()) {
   const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
   const dow = (d.getDay() + 6) % 7; // 0 = segunda
   d.setDate(d.getDate() - dow);
-  return d.toISOString().slice(0, 10);
+  return isoLocal(d);
 }
 
 /** Quantas aulas confirmadas o aluno tem na semana corrente. */
@@ -310,7 +310,7 @@ export function aulasNaSemana(reservas: any[], base = new Date()) {
   const ini = inicioSemanaISO(base);
   const fimDate = new Date(`${ini}T00:00:00`);
   fimDate.setDate(fimDate.getDate() + 7);
-  const fim = fimDate.toISOString().slice(0, 10);
+  const fim = isoLocal(fimDate);
   return (reservas ?? []).filter(
     (r) =>
       r.status === "confirmada" &&
@@ -596,5 +596,5 @@ export async function fetchAssiduidade(desdeISO?: string) {
 export function diasAtrasISO(dias: number, base = new Date()) {
   const d = new Date(base);
   d.setDate(d.getDate() - dias);
-  return d.toISOString().slice(0, 10);
+  return isoLocal(d);
 }

@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { todayISO } from '@/lib/format'
 import { z } from 'zod'
 import { botAuthorized, botJson, botPreflight, botUnauthorized } from '@/lib/whatsapp-bot'
 
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/api/public/whatsapp/reservas')({
         const parsed = querySchema.safeParse(Object.fromEntries(url.searchParams))
         if (!parsed.success) return botJson({ error: 'invalid query' }, 400)
 
-        const today = new Date().toISOString().slice(0, 10)
+        const today = todayISO()
         const from = parsed.data.from ?? today
         const to = parsed.data.to ?? from
 

@@ -27,10 +27,25 @@ export function formatHora(value?: string | null) {
   return value.slice(0, 5);
 }
 
+/** Data de hoje (AAAA-MM-DD) sempre no fuso de Brasília, no navegador ou no servidor. */
 export function todayISO() {
-  const now = new Date();
-  const off = now.getTimezoneOffset();
-  return new Date(now.getTime() - off * 60000).toISOString().slice(0, 10);
+  return dataISOBrasilia(new Date());
+}
+
+/** Data (AAAA-MM-DD) de um instante no fuso de Brasília. */
+export function dataISOBrasilia(instante: Date) {
+  // en-CA formata como AAAA-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(instante);
+}
+
+/** AAAA-MM-DD a partir dos campos locais de uma data (sem passar por UTC). */
+export function isoLocal(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function youtubeEmbed(url?: string | null) {
