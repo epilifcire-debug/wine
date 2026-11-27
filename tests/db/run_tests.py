@@ -32,7 +32,8 @@ with ADMIN.cursor() as cur:
 
 def q(sql, args=()):
     with ADMIN.cursor() as cur:
-        cur.execute(sql, args)
+        # Sem parâmetros, o SQL vai cru (permite rodar arquivos com '%').
+        cur.execute(sql, args or None)
         try:
             return cur.fetchall()
         except psycopg2.ProgrammingError:
@@ -221,6 +222,59 @@ ok, msg, _ = como_usuario(u4, "update public.reservas set checkin_em=now() where
 checar("R4. Check-in dentro da janela continua funcionando", ok, msg)
 ok, msg, _ = como_usuario(u4, "update public.reservas set presenca='presente' where aluno_id=%s", (a4,))
 checar("R5. Aluno não marca a própria presença", not ok, msg)
+
+# ── Renovação antecipada e troca de plano (regressão da v1.11.0) ─────────
+adm_uid, _ = novo_usuario(admin=True)
+
+
+def pendente(aluno, plano_id):
+    return q("""insert into public.aluno_planos (aluno_id, plano_id, status, valor_centavos)
+                values (%s,%s,'aguardando_pagamento', 10000) returning id""", (aluno, plano_id))[0][0]
+
+
+def pagar(contrato_id):
+    return como_usuario(adm_uid, "select public.registrar_pagamento_presencial(%s)", (contrato_id,))
+
+
+uid, al = novo_usuario()
+p_ren = plano(semana=5)
+q("update public.planos set duracao_meses=1 where id=%s", (p_ren,))
+venc_antigo = HOJE + timedelta(days=30)
+contrato(al, p_ren, vence=venc_antigo, inicio=HOJE)
+ok, msg, _ = reservar(uid, al, aula(HOJE + timedelta(days=4)))
+checar("N1. Reserva antes da renovação", ok, msg)
+ok, msg, _ = pagar(pendente(al, p_ren))
+antigo = q("select status from public.aluno_planos where aluno_id=%s and data_inicio=%s", (al, HOJE))[0][0]
+novo = q("select data_inicio from public.aluno_planos where aluno_id=%s and status='ativo' order by data_inicio desc limit 1", (al,))[0][0]
+checar("N2. Renovação antecipada mantém o contrato atual ativo e começa no vencimento dele",
+       ok and antigo == "ativo" and novo == venc_antigo, f"{msg} antigo={antigo} novo_inicio={novo}")
+ok, msg, _ = reservar(uid, al, aula(HOJE + timedelta(days=5), "19:00"))
+checar("N3. Depois de pagar a renovação, reserva no período atual continua liberada", ok, msg)
+ok, msg, _ = reservar(uid, al, aula(venc_antigo + timedelta(days=3), "19:00"))
+checar("N4. Reserva no período da renovação é liberada", ok, msg)
+
+uid, al = novo_usuario()
+p_a, p_b = plano(semana=5), plano(ilimitado=True)
+contrato(al, p_a, vence=HOJE + timedelta(days=20), inicio=HOJE - timedelta(days=5))
+ok, msg, _ = pagar(pendente(al, p_b))
+st_a = q("select status from public.aluno_planos where aluno_id=%s and plano_id=%s", (al, p_a))[0][0]
+ok2, msg2, _ = reservar(uid, al, aula(HOJE + timedelta(days=6), "20:00"))
+checar("N5. Troca de plano encerra o antigo e o novo já vale hoje", ok and st_a == "cancelado" and ok2, f"{msg} {st_a} {msg2}")
+
+# Reparo de quem já foi afetado: estado quebrado da v1.11.0 + rodar a migration de novo.
+uid, al = novo_usuario()
+p_r = plano(semana=5)
+q("""insert into public.aluno_planos (aluno_id, plano_id, status, data_inicio, data_fim, proximo_vencimento)
+     values (%s,%s,'cancelado',%s,%s,%s)""", (al, p_r, HOJE - timedelta(days=3), HOJE, HOJE + timedelta(days=27)))
+q("""insert into public.aluno_planos (aluno_id, plano_id, status, data_inicio, data_fim, proximo_vencimento)
+     values (%s,%s,'ativo',%s,%s,%s)""", (al, p_r, HOJE + timedelta(days=27), HOJE + timedelta(days=57), HOJE + timedelta(days=57)))
+q("update public.alunos set plano_id=%s where id=%s", (p_r, al))
+ok_antes, _, _ = reservar(uid, al, aula(HOJE + timedelta(days=2), "21:00"))
+import pathlib
+mig = pathlib.Path(__file__).resolve().parents[2] / "supabase/migrations/20261127000200_renovacao_antecipada.sql"
+q(mig.read_text(encoding="utf-8"))
+ok, msg, _ = reservar(uid, al, aula(HOJE + timedelta(days=2), "21:00"))
+checar("N6. Migration repara aluno afetado (estava bloqueado e volta a reservar)", (not ok_antes) and ok, msg)
 
 falhas = [r for r in resultados if not r[1]]
 print(f"\n{len(resultados) - len(falhas)} de {len(resultados)} passaram")

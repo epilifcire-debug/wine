@@ -12,4 +12,5 @@ python3 tests/db/run_tests.py   # precisa de: pip install psycopg2-binary
 Cobre: Day Use em reserva nova, validade pela data da aula, limite mensal com reservas
 simultâneas, cancelamento de aula passada/com presença, reserva de aula passada,
 exclusão pelo aluno, reserva já com presença, mesmo dia e horário, e regressões
-(limite semanal, lotação, sem plano, check-in, presença).
+(limite semanal, lotação, sem plano, check-in, presença), renovação antecipada,
+troca de plano e o reparo de alunos afetados pela regressão da v1.11.0.

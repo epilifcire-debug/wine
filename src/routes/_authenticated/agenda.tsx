@@ -103,13 +103,16 @@ function Agenda() {
     enabled: Boolean(aluno?.id),
     refetchInterval: 15000,
   });
-  const contratoAtual = contratos.find((c) =>
+  // Com renovação antecipada o aluno tem dois contratos ativos do mesmo plano
+  // (o atual e o que começa no vencimento dele): vale o vencimento mais distante.
+  const contratosVigentes = contratos.filter((c) =>
     c.plano_id === aluno?.plano_id &&
     (statusContrato(c) === "ativo" || statusContrato(c) === "proximo_vencimento") &&
     Boolean(c.proximo_vencimento && c.proximo_vencimento >= todayISO()),
   );
-  const contratoVigente = Boolean(contratoAtual);
-  const vencimento = contratoAtual?.proximo_vencimento ?? null;
+  const contratoVigente = contratosVigentes.length > 0;
+  const vencimento =
+    contratosVigentes.map((c) => c.proximo_vencimento as string).sort().at(-1) ?? null;
 
   const { data: dayUsesDisponiveis = 0, isPending: dayUsesPendentes } = useQuery({
     queryKey: ["day-uses", "disponiveis", aluno?.id],
@@ -270,6 +273,10 @@ function Agenda() {
         return;
       }
       if (reason === "PLAN_EXPIRED") {
+        if (/PLAN_NOT_STARTED/.test(msg)) {
+          setSemPlanoMsg("Seu plano ainda não começou na data desta aula. Escolha uma aula dentro do período do plano.");
+          return;
+        }
         setSemPlanoMsg(/PLAN_EXPIRED/.test(msg) ? msgPlanoVenceAntes(vencimento) : MSG_PLAN_EXPIRED);
         return;
       }
