@@ -17,17 +17,17 @@ export type UsuarioAdmin = {
   criado_em: string;
 };
 
-function assertMaster(claims: Record<string, unknown>) {
-  const email = String((claims as any)?.email ?? "").toLowerCase();
-  if (email !== ADMIN_MASTER_EMAIL) {
-    throw new Error("Acesso restrito ao Administrador Master.");
-  }
+/** True quando a conta-alvo é o Administrador Master (ninguém pode alterá-lo). */
+async function alvoEhMaster(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+  return (data?.user?.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL;
 }
 
 export const listarUsuarios = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<UsuarioAdmin[]> => {
-    assertMaster(context.claims as Record<string, unknown>);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: users, error } = await supabaseAdmin.auth.admin.listUsers({
@@ -87,12 +87,14 @@ export const definirPerfil = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ context, data }) => {
-    assertMaster(context.claims as Record<string, unknown>);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: alvo } = await supabaseAdmin.auth.admin.getUserById(data.userId);
-    if ((alvo?.user?.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL) {
+    if (await alvoEhMaster(data.userId)) {
       throw new Error("O Administrador Master não pode ter o perfil alterado.");
+    }
+    if (data.userId === context.userId) {
+      throw new Error("Você não pode alterar o seu próprio perfil.");
     }
 
     const { error: delErr } = await supabaseAdmin
@@ -236,7 +238,7 @@ export type RelatorioAlunos = {
 export const listarContasSemFicha = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<ContaSemFicha[]> => {
-    assertMaster(context.claims as Record<string, unknown>);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: users, error }, { data: alunos }, { data: roles }] = await Promise.all([
@@ -273,7 +275,7 @@ export const vincularAlunoConta = createServerFn({ method: "POST" })
     z.object({ alunoId: z.string().uuid(), userId: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
-    assertMaster(context.claims as Record<string, unknown>);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: existente } = await supabaseAdmin
@@ -296,7 +298,7 @@ export const vincularAlunoConta = createServerFn({ method: "POST" })
 export const relatorioAlunos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<RelatorioAlunos> => {
-    assertMaster(context.claims as Record<string, unknown>);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ data: users }, { data: alunos }, { data: roles }] = await Promise.all([
@@ -353,7 +355,7 @@ function senhaProvisoria(tamanho = 10) {
 /**
  * Admin define uma senha provisória para a conta (útil para quem não tem e-mail).
  * A senha é devolvida uma única vez para ser repassada à pessoa.
- * Contas administrativas só podem ser redefinidas pelo Administrador Master.
+ * Qualquer admin pode redefinir, exceto a senha do Administrador Master.
  */
 export const redefinirSenhaUsuario = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -365,17 +367,8 @@ export const redefinirSenhaUsuario = createServerFn({ method: "POST" })
     const { data: alvo, error: alvoErr } = await supabaseAdmin.auth.admin.getUserById(data.userId);
     if (alvoErr || !alvo.user) throw new Error("Conta não encontrada.");
 
-    const ehMaster = String((context.claims as any)?.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL;
     if ((alvo.user.email ?? "").toLowerCase() === ADMIN_MASTER_EMAIL) {
       throw new Error("A senha do Administrador Master só pode ser trocada por ele, no Perfil.");
-    }
-    const { data: papeis } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", data.userId);
-    const alvoAdmin = (papeis ?? []).some((r) => ["admin", "admin_master"].includes(String(r.role)));
-    if (alvoAdmin && !ehMaster) {
-      throw new Error("Só o Administrador Master pode redefinir a senha de outro administrador.");
     }
 
     const senha = senhaProvisoria();

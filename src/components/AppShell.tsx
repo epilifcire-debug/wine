@@ -158,7 +158,7 @@ const adminGroups: NavigationGroup[] = [
 const masterGroups: NavigationGroup[] = [
   ...adminGroups,
   {
-    label: "Administração Master",
+    label: "Administração do sistema",
     items: [
       { to: "/admin/usuarios", label: "Usuários e perfis", icon: ShieldCheck },
       { to: "/admin/whatsapp", label: "WhatsApp do bot", icon: MessageCircle },
@@ -242,7 +242,7 @@ function NavigationSidebar({ groups, path, isAdmin }: { groups: NavigationGroup[
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { isAdmin, isAdminMaster, isProfessor, loading, signOut } = useAuth();
+  const { isAdmin, isProfessor, loading, signOut } = useAuth();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -277,11 +277,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [loading, isAdmin, path, navigate]);
 
-  const groups = isAdminMaster
+  // Admins têm o mesmo menu do Administrador Master; só a conta master é protegida.
+  const groups = isAdmin
     ? masterGroups
-    : isAdmin
-      ? adminGroups
-      : isProfessor
+    : isProfessor
         ? professorGroups
         : alunoGroups;
 

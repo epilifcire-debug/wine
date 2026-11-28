@@ -31,10 +31,10 @@ const ROTULO: Record<Status["estado"], string> = {
 };
 
 function WhatsappBot() {
-  const { isAdminMaster, loading } = useAuth();
+  const { isAdmin, loading } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["whatsapp-bot-status"],
-    enabled: isAdminMaster,
+    enabled: isAdmin,
     refetchInterval: 4000,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -57,14 +57,14 @@ function WhatsappBot() {
   }, [data?.estado, data?.qr]);
 
   if (loading) return <EmptyState>Verificando permissões…</EmptyState>;
-  if (!isAdminMaster) return <EmptyState>Esta área é exclusiva do Administrador Master.</EmptyState>;
+  if (!isAdmin) return <EmptyState>Esta área é exclusiva da administração.</EmptyState>;
 
   // Sem atualização há mais de 3 minutos: o bot pode estar parado.
   const semSinal = data ? Date.now() - new Date(data.atualizado_em).getTime() > 3 * 60 * 1000 : true;
 
   return (
     <div className="space-y-4">
-      <PageTitle eyebrow="Administração Master" title="WhatsApp do bot" />
+      <PageTitle eyebrow="Administração" title="WhatsApp do bot" />
       {isLoading ? (
         <EmptyState>Carregando…</EmptyState>
       ) : (

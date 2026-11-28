@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios")({
       { title: "Gestão de usuários — Wine Barbell Club" },
       {
         name: "description",
-        content: "Administrador Master: defina os perfis de acesso dos usuários do estúdio.",
+        content: "Administração: defina os perfis de acesso dos usuários do estúdio.",
       },
       { property: "og:title", content: "Gestão de usuários — Wine Barbell Club" },
       { property: "og:description", content: "Controle de perfis e acessos do Wine Barbell Club." },
@@ -41,7 +41,7 @@ const GRUPOS: { titulo: string; vazio: string; perfis: UsuarioAdmin["perfil"][] 
 ];
 
 function UsuariosAdmin() {
-  const { isAdminMaster, loading } = useAuth();
+  const { isAdmin, user, loading } = useAuth();
   const qc = useQueryClient();
   const listar = useServerFn(listarUsuarios);
   const definir = useServerFn(definirPerfil);
@@ -49,7 +49,7 @@ function UsuariosAdmin() {
   const { data: usuarios = [], isLoading } = useQuery<UsuarioAdmin[]>({
     queryKey: ["admin-usuarios"],
     queryFn: () => listar(),
-    enabled: isAdminMaster,
+    enabled: isAdmin,
   });
 
   const alterar = useMutation({
@@ -65,12 +65,12 @@ function UsuariosAdmin() {
   });
 
   if (loading) return <EmptyState>Verificando permissões…</EmptyState>;
-  if (!isAdminMaster)
-    return <EmptyState>Esta área é exclusiva do Administrador Master.</EmptyState>;
+  if (!isAdmin)
+    return <EmptyState>Esta área é exclusiva da administração.</EmptyState>;
 
   return (
     <>
-      <PageTitle eyebrow="Administrador Master" title="Usuários" />
+      <PageTitle eyebrow="Administração" title="Usuários" />
       {isLoading ? (
         <EmptyState>Carregando usuários…</EmptyState>
       ) : (
@@ -100,6 +100,8 @@ function UsuariosAdmin() {
               <div className="mt-3">
                 {u.perfil === "admin_master" ? (
                   <p className="text-sm font-semibold text-primary">Administrador Master</p>
+                ) : u.id === user?.id ? (
+                  <p className="text-sm font-semibold text-primary">Você · Administrador</p>
                 ) : (
                   <Select
                     value={u.perfil}
@@ -119,7 +121,7 @@ function UsuariosAdmin() {
                     </SelectContent>
                   </Select>
                 )}
-                {u.perfil !== "admin_master" && (
+                {u.perfil !== "admin_master" && u.id !== user?.id && (
                   <div className="mt-2">
                     <RedefinirSenhaButton userId={u.id} nome={u.nome} variante="texto" />
                   </div>

@@ -122,7 +122,7 @@ type Filtro = (typeof FILTROS)[number]["value"];
 
 function AdminAlunos() {
   const qc = useQueryClient();
-  const { isAdminMaster } = useAuth();
+  const { isAdmin } = useAuth();
   const navigate = Route.useNavigate();
   const { filtro: filtroUrl } = Route.useSearch();
   const [busca, setBusca] = useState("");
@@ -160,12 +160,12 @@ function AdminAlunos() {
   const { data: contasSemFicha = [] } = useQuery({
     queryKey: ["admin-contas-sem-ficha"],
     queryFn: () => listarContas(),
-    enabled: isAdminMaster,
+    enabled: isAdmin,
   });
   const { data: numeros } = useQuery({
     queryKey: ["admin-relatorio-alunos"],
     queryFn: () => relatorio(),
-    enabled: isAdminMaster,
+    enabled: isAdmin,
   });
 
   const vincularConta = useMutation({
@@ -330,7 +330,7 @@ function AdminAlunos() {
         </Select>
       </div>
 
-      {isAdminMaster && numeros && (
+      {isAdmin && numeros && (
         <div className="surface-panel mb-4 grid grid-cols-2 gap-3 px-4 py-3 text-xs sm:grid-cols-5">
           {[
             ["Total de fichas", numeros.total],
@@ -413,7 +413,7 @@ function AdminAlunos() {
                     </div>
                   </div>
                   <div className="flex shrink-0 gap-1">
-                    {isAdminMaster && !a.user_id && (
+                    {isAdmin && !a.user_id && (
                       <Dialog>
                         <DialogTrigger asChild>
                           <Button size="icon" variant="ghost" aria-label="Vincular conta">
